@@ -170,7 +170,7 @@ const Footer = () => {
             className="w-7"
           />
           <img
-            src="/assets/icons/bitconIcon.svg"
+            src="/assets/icons/bitcoinIcon.svg"
             alt="payment-img"
             className="w-7 "
           />

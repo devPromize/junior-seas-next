@@ -1,4 +1,4 @@
-import Image from 'next/image';
+// import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
 
 interface HomeFeatureImgsProps {
@@ -17,9 +17,9 @@ const HomeFeatureImgs = ({
   );
   return (
     <div>
-      <Image
-        width={400}
-        height={400}
+      <img
+        // width={undefined}
+        // height={undefined}
         src={src}
         alt={alt || src + 'hero'}
         className={mergedClassName}

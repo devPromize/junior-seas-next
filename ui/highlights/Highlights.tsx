@@ -1,10 +1,10 @@
 'use client';
-import ProductHighlightBlock from './ProductHighlightBlock';
-import HomeFeatureImgs from './HomeFeatureImgs';
 
 import Container from '../Container';
 import { useAllHighlights } from '../../hooks/useHighlights';
+import ProductHighlightBlock from './ProductHighlightBlock';
 import ProductGridSkeleton from '../components/ProductGridSkeleton';
+import HomeFeatureImgs from './HomeFeatureImgs';
 
 interface HighlightSection {
   type: 'section';
@@ -19,37 +19,41 @@ interface HighlightImage {
 type HighlightItem = HighlightSection | HighlightImage;
 
 const highlightSections: HighlightItem[] = [
-  {
-    type: 'section',
-    key: 'NEW AT JUNIOR SEAS',
-    title: 'New at Junior Seas',
-  },
+  { type: 'section', key: 'NEW AT JUNIOR SEAS', title: 'New at Junior Seas' },
   { type: 'image' },
-  {
-    type: 'section',
-    key: 'POPULAR AT JUNIOR SEAS',
-    title: 'Popular at Junior Seas',
-  },
-  {
-    type: 'section',
-    key: 'ONLY AT JUNIOR SEAS',
-    title: 'Only at Junior Seas',
-  },
+  { type: 'section', key: 'POPULAR AT JUNIOR SEAS', title: 'Popular at Junior Seas' },
+  { type: 'section', key: 'ONLY AT JUNIOR SEAS', title: 'Only at Junior Seas' },
   { type: 'image2' },
-  {
-    type: 'section',
-    key: 'HOT DEALS AND SALES',
-    title: 'Hot Deals & Sales',
-  },
+  { type: 'section', key: 'HOT DEALS AND SALES', title: 'Hot Deals & Sales' },
 ];
-const Highlights = () => {
-  const {
-    data: highlights,
-    isLoading,
-    isError,
-  } = useAllHighlights();
 
-  // While top-level fetch is loading show skeletons for the sections
+// ===== Helper Renderers for Reuse =====
+const ImageGroupOne = () => (
+  <Container>
+    <div className="flex gap-4 flex-col md:flex-row">
+      <div className="flex gap-4">
+        <HomeFeatureImgs src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png" alt="ANC Earphones" />
+        <HomeFeatureImgs src="/assets/js-imgs/Home-Smart-Watches-768x768.png" alt="Smart Watches" />
+      </div>
+      <HomeFeatureImgs src="/assets/js-imgs/uk-used-iphones-img.jpeg" alt="UK Used iPhones" />
+    </div>
+  </Container>
+);
+
+const ImageGroupTwo = () => (
+  <Container>
+    <div className="flex gap-4 flex-col md:flex-row">
+      <HomeFeatureImgs src="/assets/js-imgs/S25-Ultra-Infographic-768x922.jpg" alt="S25 Ultra" />
+      <HomeFeatureImgs src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png" alt="Google Pixel 9" />
+      <HomeFeatureImgs src="/assets/js-imgs/Authentic-Apple-Accessories-768x922.png" alt="Apple Accessories" />
+    </div>
+  </Container>
+);
+
+const Highlights = () => {
+  const { data: highlights, isLoading, isError } = useAllHighlights();
+
+  // ====== LOADING STATE ======
   if (isLoading) {
     return (
       <div className="space-y-10">
@@ -63,125 +67,38 @@ const Highlights = () => {
                 <ProductGridSkeleton count={12} />
               </div>
             );
-          } else if (item.type === 'image') {
-            return (
-              <Container key={`image1-${i}`}>
-                <div className="flex gap-4 flex-col md:flex-row">
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png"
-                    className="w-full max-w-l"
-                    alt="ANC Earphones"
-                  />
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/Home-Smart-Watches-768x768.png"
-                    className="w-full max-w-l"
-                    alt="Home Smart Watch"
-                  />
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/uk-used-iphones-img.jpeg"
-                    className="w-full lg:col-span-2"
-                    alt="UK Used iPhones"
-                  />
-                </div>
-              </Container>
-            );
-          } else {
-            // image2
-            return (
-              <Container key={`image2-${i}`}>
-                <div className="flex gap-4 flex-col md:flex-row">
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png"
-                    className=""
-                    alt="appleAccessories"
-                  />
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png"
-                    className=""
-                    alt="ANC Earphones"
-                  />
-                  <HomeFeatureImgs
-                    src="/assets/js-imgs/S25-Ultra-Infographic-768x922.jpg"
-                    alt="Home Smart Watch"
-                  />
-                </div>
-              </Container>
-            );
           }
+          if (item.type === 'image') return <ImageGroupOne key={`image1-${i}`} />;
+          if (item.type === 'image2') return <ImageGroupTwo key={`image2-${i}`} />;
+          return null;
         })}
       </div>
     );
   }
 
-  if (isError)
-    return (
-      <div className="text-center text-red-500">
-        Failed to load highlights
-      </div>
-    );
+  // ====== ERROR STATE ======
+  if (isError) {
+    return <div className="text-center text-red-500">Failed to load highlights</div>;
+  }
 
-  // Loaded: pass products for each section (use empty array if none)
+  // ====== SUCCESS STATE ======
   return (
     <div className="space-y-10">
       {highlightSections.map((item, index) => {
         if (item.type === 'section') {
-          const productsForSection =
-            highlights?.[item.key] ?? []; // pass [] when loaded but empty
+          const products = highlights?.[item.key] ?? [];
           return (
             <ProductHighlightBlock
               key={item.key}
               sectionKey={item.key}
               title={item.title ?? 'Default Title'}
-              products={productsForSection}
+              products={products}
             />
           );
-        } else if (item.type === 'image') {
-          return (
-            <div
-              key={`image-${index}`}
-              className="flex flex-col justify-center md:flex-row lg:flex-row gap-4 bg-gray-100 p-4 rounded-lg"
-            >
-              <div className="flex gap-4">
-                <HomeFeatureImgs
-                  src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png"
-                  className="w-full max-w-l"
-                  alt="ANC Earphones"
-                />
-                <HomeFeatureImgs
-                  src="/assets/js-imgs/Home-Smart-Watches-768x768.png"
-                  className="w-full max-w-l"
-                  alt="Home Smart Watch"
-                />
-              </div>
-              <HomeFeatureImgs
-                src="/assets/js-imgs/uk-used-iphones-img.jpeg"
-                className="w-full lg:col-span-2"
-                alt="UK Used iPhones"
-              />
-            </div>
-          );
-        } else {
-          return (
-            <Container key={`image-${index}`}>
-              <div className="flex gap-4 flex-col md:flex-row">
-                <HomeFeatureImgs
-                  src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png"
-                  className=""
-                  alt="appleAccessories"
-                />
-                <HomeFeatureImgs
-                  src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png"
-                  className=""
-                  alt="ANC Earphones"
-                />
-                <HomeFeatureImgs
-                  src="/assets/js-imgs/Home-Smart-Watches-768x768.png"
-                  alt="Home Smart Watch"
-                />
-              </div>
-            </Container>
-          );
         }
+        if (item.type === 'image') return <ImageGroupOne key={`image-${index}`} />;
+        if (item.type === 'image2') return <ImageGroupTwo key={`image2-${index}`} />;
+        return null;
       })}
     </div>
   );
