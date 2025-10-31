@@ -638,6 +638,7 @@ import { useSearchProducts } from '../hooks/useSearchProducts';
 import SearchSuggestions from '../ui/SearchSuggestions';
 import Portal from '../ui/Portal';
 import { useRouter } from 'next/navigation';
+import ProductCard from './components/ProductCard';
 
 const headerNavLinks = [
   { title: 'Home', to: '/' },
@@ -997,11 +998,21 @@ const Header = () => {
                               <span className="text-sm font-medium text-gray-900">
                                 {product.name}
                               </span>
-                              {product.price && (
+
+                              {(product.minPrice || product.maxPrice) && (
+  <span className="text-xs text-gray-500">
+    {product.hasRange
+      ? `₦${product.minPrice.toLocaleString()} - ₦${product.maxPrice.toLocaleString()}`
+      : `₦${product.minPrice?.toLocaleString()}`}
+  </span>
+)}
+
+
+                              {/* {product.price && (
                                 <span className="text-xs text-gray-500">
                                   ₦{product.price.toLocaleString()}
                                 </span>
-                              )}
+                              )} */}
                             </div>
                           </Link>
                         </li>

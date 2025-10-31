@@ -1,35 +1,49 @@
-import { searchProductsService } from '@/lib/services/searchService';
+// src/app/api/search/route.ts
 import { createClient } from '@/lib/services/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   try {
     const supabase = await createClient();
-
     const { searchParams } = new URL(req.url);
-    const q = searchParams.get('q') || '';
+    const q = searchParams.get('q')?.trim();
+
     if (!q) {
-      return NextResponse.json({ products: [] });
+      return NextResponse.json({ products: [] }, { status: 200 });
     }
 
-    const results = await searchProductsService(q);
-    // Log search query to search_history table
+    // Search strictly by name and brand
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
+      .limit(50);
+
+    if (error) throw error;
+
+    // Reformat results to match highlights structure
+    const products = (data || []).map((p: any) => ({
+      ...p,
+      image:
+        p.image ||
+        p?.variants?.[0]?.image ||
+        (Array.isArray(p.images) ? p.images[0] : null) ||
+        '/placeholder.png',
+      variants: Array.isArray(p.variants) ? p.variants : [],
+    }));
+
+    // Optional: log search to search_history
     await supabase.from('search_history').insert([
       {
         query: q,
-        user_id: null, // or req.user?.id if you have auth
-        product_id: results?.[0]?.id || null, // optional: first match
+        product_id: products?.[0]?.id || null,
+        user_id: null,
       },
     ]);
-    return NextResponse.json(
-      { products: results },
-      { status: 200 }
-    );
+
+    return NextResponse.json({ products }, { status: 200 });
   } catch (error: any) {
-    console.error(
-      '❌ Error in searchProducts:',
-      error.message || error
-    );
+    console.error('❌ Error in searchProducts:', error.message || error);
     return NextResponse.json(
       { error: error.message || 'Search failed' },
       { status: 500 }
