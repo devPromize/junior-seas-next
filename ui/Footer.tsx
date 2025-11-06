@@ -12,7 +12,6 @@ import {
 
 const customerService = [
   { title: 'Warranty', to: '/warranty' },
-  { title: 'Payments', to: '/payments' },
   { title: 'Delivery', to: '/delivery' },
   { title: 'Returns', to: '/returns' },
 ];
@@ -63,11 +62,11 @@ const Footer = () => {
           <div className="py-2">
             <div className="flex items-center space-x-2">
               <FaEnvelope className="text-xl text-blue-500" />
-              <span>juniorseas@email.com</span>
+              <span>juniorseastecnologies@gmail.com</span>
             </div>
             <div className="flex items-center space-x-2 pt-1">
               <FaPhone className="text-xl text-green-500" />
-              <span>+123 456 7890</span>
+              <span>08035057225, 08106165292</span>
             </div>
           </div>
         </div>
