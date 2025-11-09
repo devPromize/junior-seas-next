@@ -1,12 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { getCategories } from '../services/select-category-service';
+import { Key } from 'swr';
 
 interface Category {
+  id: Key | null | undefined;
   image_url: string;
   title: string | undefined;
   _id: string;
   name: string;
   image?: string;
+  slug?: string;
   // Add more fields if needed
 }
 

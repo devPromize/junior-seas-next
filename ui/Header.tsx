@@ -29,12 +29,11 @@ import { useSearchProducts } from "../hooks/useSearchProducts";
 import SearchSuggestions from "../ui/SearchSuggestions";
 import Portal from "../ui/Portal";
 import { useRouter } from "next/navigation";
-import ProductCard from "./components/ProductCard";
 
 const headerNavLinks = [
   { title: "Home", to: "/" },
   { title: "Shop", to: "/shop" },
-  { title: "Brands", to: "/brands" },
+  // { title: "Brands", to: "/brands" },
   { title: "Cart", to: "/cart" },
   { title: "Account", to: "/account" },
   { title: "About Us", to: "/about-us" },
@@ -240,9 +239,9 @@ const Header = () => {
                         )
                       )
                       .map((item) => (
-                        <MenuItem key={item._id}>
+                        <MenuItem key={String(item.id ?? item.slug)}>
                           <Link
-                            href={`/category/${item._id}`}
+                            href={`/category/${item.slug}`}
                             className="flex gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <img

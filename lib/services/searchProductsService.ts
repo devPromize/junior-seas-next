@@ -39,7 +39,5 @@ export const searchProductsService = async (query: string) => {
       image: previewImage,
     };
   });
-console.log('SEARCH SERVICE sample:', JSON.stringify(refined[0], null, 2));
-
   return refined;
 };

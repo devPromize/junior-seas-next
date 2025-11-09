@@ -1,3 +1,5 @@
+'use client';
+
 import { FC, useMemo } from 'react';
 import { FaHeart } from 'react-icons/fa';
 import { useCart } from '../../context/CartContext';
