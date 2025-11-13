@@ -82,7 +82,7 @@ const BrandCarousel = () => {
   const router = useRouter();
 
   const handleBrandClick = (brand: string) => {
-    router.push(`/products/${brand.toLowerCase()}`);
+    router.push(`/brand/${brand.toLowerCase()}`);
   };
 
   return (

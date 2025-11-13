@@ -1,13 +1,14 @@
 'use client;';
 import Link from 'next/link';
 import Container from './Container';
-import { FaEnvelope, FaPhone } from 'react-icons/fa';
+import { FaEnvelope, FaPhone,} from 'react-icons/fa';
 import {
   FaFacebook,
   FaInstagram,
   FaLinkedin,
   FaWhatsapp,
   FaTwitter,
+  FaTiktok
 } from 'react-icons/fa';
 
 const customerService = [
@@ -119,28 +120,35 @@ const Footer = () => {
           <p>@2025 Junior Seas. All Rights Reserved.</p>
           <div className="flex space-x-4">
             <a
-              href="https://facebook.com"
+              href="https://www.facebook.com/share/17S9sFug74/?mibextid=wwXIfr"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaFacebook className="text-2xl text-blue-700 hover:text-blue-500 transition" />
             </a>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/juniorseastech?igsh=MWl1OHdic216anljaA%3D%3D&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaInstagram className="text-2xl text-pink-600 hover:text-pink-400 transition" />
             </a>
             <a
-              href="https://linkedin.com"
+              href="http://www.tiktok.com/@juniorseastech"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+             <FaTiktok className="text-2xl text-[#69C9D0] hover:text-[#EE1D52] transition" />
+            </a>
+            <a
+              href="https://www.linkedin.com/company/juniorseastech/"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaLinkedin className="text-2xl text-blue-500 hover:text-blue-400 transition" />
             </a>
             <a
-              href="https://wa.me/1234567890"
+              href="https://wa.me/2348106165292"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -7,6 +7,8 @@ import { Toaster } from 'react-hot-toast';
 import ScrollToTop from './ScrollToTop';
 import BackToTopButton from './components/BackToTopButton';
 import WhatsAppChatWidget from './components/WhatsAppChatWidget';
+import InitialReveal from "@/ui/components/InitialReveal";
+
 
 const Layout = ({
   children,
@@ -16,7 +18,7 @@ const Layout = ({
   return (
     <>
       <Header />
-      {children}
+      <InitialReveal>{children}</InitialReveal>
       <BrandCarousel />
       <ScrollToTop />
       <Footer />
