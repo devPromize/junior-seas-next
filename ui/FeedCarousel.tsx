@@ -117,10 +117,11 @@ const FeedCarousel = () => {
       >
         {data.map((slide: Slide) => (
           <SwiperSlide key={slide.id}>
-            <Link
-              href={`/products/base/${slide.title}`}
-              aria-label={`View product: ${slide.title}`}
-            >
+<Link
+  href={`/search?q=${encodeURIComponent(slide.title)}`}
+  aria-label={`Search products related to ${slide.title}`}
+>
+
               <div className="w-full h-full relative rounded-xl overflow-hidden shadow-lg">
                 <Image
                   fill

@@ -1,3 +1,5 @@
+//=======================================================
+// lib/services/productService.ts
 'use server';
 import slugify from 'slugify';
 import { createClient } from './server';
@@ -16,34 +18,18 @@ export interface ProductQueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-export const fetchSingleProduct = async (
-  productId: number | string
-) => {
+/* Fetch Single Product */
+export const fetchSingleProduct = async (productId: number | string) => {
   const supabase = await createClient();
-
-  // Use the .select('*') and .eq() method to filter by the product ID
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', productId) // Assuming 'id' is the unique column name
-    .single(); // Use .single() to expect 0 or 1 row and return an object instead of an array
-
-  if (error) {
-    console.error(
-      `❌ Supabase fetchSingleProduct error for ID ${productId}:`,
-      error.message
-    );
-    throw error;
-  }
-
-  // data will be the product object or null if not found
+  const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+  if (error) throw error;
   return data;
 };
 
-export const fetchProducts = async (
-  params: ProductQueryParams = {}
-) => {
+/* Fetch Products — robust variant matching + pagination */
+export const fetchProducts = async (params: ProductQueryParams = {}) => {
   const supabase = await createClient();
+
   const {
     page = 1,
     limit = 20,
@@ -58,90 +44,179 @@ export const fetchProducts = async (
     sortOrder = 'desc',
   } = params;
 
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  // ---- Normalizers ----
+  const normalizeRam = (raw?: string) => raw?.toUpperCase().replace(/\s+/g, '') || '';
+  const normalizeRom = (raw?: string) => {
+    if (!raw) return NaN;
+    const s = String(raw).trim().toUpperCase();
+    if (s.includes('TB')) {
+      const num = parseFloat(s.replace(/[^\d.]/g, '')) || 0;
+      return Math.round(num * 1024);
+    }
+    const num = parseFloat(s.replace(/[^\d.]/g, '')) || NaN;
+    return num;
+  };
+  const normalizeColor = (raw?: string) => raw?.trim().toLowerCase() || '';
 
-  let query = supabase
-    .from('products')
-    .select('*', { count: 'exact' });
+  const requestedRam = ram ? normalizeRam(ram) : '';
+  const requestedRom = rom ? normalizeRom(rom) : NaN;
+  const requestedColor = color ? normalizeColor(color) : '';
 
-  // ✅ Top-level filters
-  if (category)
-    query = query.ilike('category', `%${category}%`);
-  if (search) query = query.ilike('name', `%${search}%`);
+  // // --- Fetch base rows from Supabase (no JSONB cs filters) ---
+  // let query = supabase.from('products').select('*');
+  // if (category) query = query.ilike('category', `%${category}%`);
+  // if (search) query = query.ilike('name', `%${search}%`);
+  // query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
-  // ✅ Variant filters (JSONB)
-  let variantFilter: any = {};
-  if (ram) variantFilter.ram = ram;
-  if (rom) variantFilter.rom = rom;
-  if (color) variantFilter.color = color;
 
-  if (Object.keys(variantFilter).length > 0) {
-    query = query.contains('variants', [variantFilter]);
-  }
 
-  // ✅ Sorting
-  query = query.order(sortBy, {
-    ascending: sortOrder === 'asc',
+  let query = supabase.from('products').select('*');
+
+if (category) query = query.ilike('category', `%${category}%`);
+if (search) query = query.ilike('name', `%${search}%`);
+
+// ✅ Only let Supabase sort REAL DB columns
+const dbSortableColumns = ['created_at', 'name', 'brand', 'category'];
+
+if (dbSortableColumns.includes(sortBy)) {
+  query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+}
+
+
+
+
+  const { data: rows, error } = await query;
+  if (error) throw error;
+
+  let products = Array.isArray(rows) ? rows.filter(Boolean) : [];
+
+  // ✅ PRICE SORTING (variants-based)
+if (sortBy === 'price') {
+  products.sort((a: any, b: any) => {
+    const getLowestPrice = (p: any) => {
+      if (!Array.isArray(p?.variants)) return Infinity;
+      const prices = p.variants.map((v: any) => Number(v.price)).filter((n: number) => !isNaN(n));
+      return prices.length ? Math.min(...prices) : Infinity;
+    };
+
+    const priceA = getLowestPrice(a);
+    const priceB = getLowestPrice(b);
+
+    return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
   });
+}
 
-  // ✅ Pagination
-  query = query.range(from, to);
 
-  const { data, count, error } = await query;
-  if (error) {
-    console.error(
-      '❌ Supabase fetchProducts error:',
-      error.message
-    );
-    throw error;
-  }
+  // --- Variant filtering in JS (supports multiple variant objects per product) ---
+  if (requestedRam || !isNaN(requestedRom) || requestedColor) {
+    products = products.filter((p: any) => {
+      const variants: any[] = Array.isArray(p?.variants) ? p.variants : [];
 
-  // ⚠️ Price filtering in JSONB is tricky → do it in-memory
-  let filteredData = data || [];
-  if (price_min !== undefined || price_max !== undefined) {
-    filteredData = filteredData.filter((product: any) => {
-      // Assume each product has `variants` array with objects containing `price`
-      return product.variants.some(
-        (v: any) =>
-          (!price_min || v.price >= price_min) &&
-          (!price_max || v.price <= price_max)
-      );
+      if (!variants.length) return false;
+
+      return variants.some((v: any) => {
+        const vRam = normalizeRam(v?.ram);
+        const vRom = normalizeRom(v?.rom);
+        const vColor = normalizeColor(v?.color);
+
+        const ramMatches = requestedRam ? vRam === requestedRam : true;
+        const romMatches = !isNaN(requestedRom) ? vRom === requestedRom : true;
+        const colorMatches = requestedColor ? vColor === requestedColor : true;
+
+        return ramMatches && romMatches && colorMatches;
+      });
     });
   }
 
-  return { data: filteredData, count };
+  // --- Price filter in JS (variants may have different prices) ---
+  if (price_min !== undefined || price_max !== undefined) {
+    products = products.filter((p: any) =>
+      (p.variants || []).some((v: any) => {
+        const price = Number(v?.price);
+        if (Number.isNaN(price)) return false;
+        if (price_min !== undefined && price < price_min) return false;
+        if (price_max !== undefined && price > price_max) return false;
+        return true;
+      })
+    );
+  }
+
+  // --- Pagination after filtering ---
+  const total = products.length;
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  const paginated = products.slice(start, end);
+
+  return {
+    data: paginated,
+    count: total,
+  };
 };
 
-// ✅ Create Product
+/* Fetch All Variants for filters (global) */
+export const fetchAllVariants = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('products').select('variants');
+  if (error) throw error;
+
+  const ramSet = new Set<string>();
+  const romSet = new Set<string>();
+
+  data?.forEach((product: any) => {
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    variants.forEach((variant: any) => {
+      if (variant?.ram) ramSet.add(variant.ram);
+      if (variant?.rom) romSet.add(variant.rom);
+    });
+  });
+
+  return {
+    ramOptions: Array.from(ramSet),
+    romOptions: Array.from(romSet),
+  };
+};
+
+/* Fetch Price Bounds (min/max) */
+export const fetchPriceBounds = async () => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('products').select('variants');
+  if (error) throw error;
+
+  let min = Infinity;
+  let max = 0;
+
+  data?.forEach((product: any) => {
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    variants.forEach((variant: any) => {
+      const price = Number(variant?.price);
+      if (!Number.isNaN(price)) {
+        if (price < min) min = price;
+        if (price > max) max = price;
+      }
+    });
+  });
+
+  return {
+    minPrice: min === Infinity ? 0 : min,
+    maxPrice: max,
+  };
+};
+
+/* Create Product */
 export const createProduct = async (product: any) => {
   const supabase = await createClient();
   const slug = slugify(product.name, { lower: true });
-  const { data, error } = await supabase
-    .from('products')
-    .insert([{ ...product, slug }])
-    .single();
+  const { data, error } = await supabase.from('products').insert([{ ...product, slug }]).select().single();
   if (error) throw error;
   return data;
 };
 
-// ✅ Update Product
-export const updateProduct = async (
-  id: string,
-  product: any
-) => {
+/* Update Product */
+export const updateProduct = async (id: string, product: any) => {
   const supabase = await createClient();
   const updateData = { ...product };
-  if (product.name) {
-    updateData.slug = slugify(product.name, {
-      lower: true,
-    });
-  }
-  const { data, error } = await supabase
-    .from('products')
-    .update(updateData)
-    .eq('id', id)
-    .single();
+  if (product.name) updateData.slug = slugify(product.name, { lower: true });
+  const { data, error } = await supabase.from('products').update(updateData).eq('id', id).single();
   if (error) throw error;
   return data;
 };

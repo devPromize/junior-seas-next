@@ -1,7 +1,7 @@
-import {
-  createProduct,
-  fetchProducts,
-} from '@/lib/services/productService';
+//========================================================//
+//=======================================================
+// app/api/products/route.ts
+import { createProduct, fetchProducts } from '@/lib/services/productService';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -9,11 +9,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(
-      searchParams.get('limit') || '20'
-    );
-    const category =
-      searchParams.get('category') || undefined;
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const category = searchParams.get('category') || undefined;
     const search = searchParams.get('search') || undefined;
     const price_min = searchParams.get('price_min')
       ? parseInt(searchParams.get('price_min')!)
@@ -25,20 +22,15 @@ export async function GET(req: Request) {
     const rom = searchParams.get('rom') || undefined;
     const color = searchParams.get('color') || undefined;
 
-    // ✅ Default sort fallback
-    const sortBy =
-      searchParams.get('sortBy') || 'created_at';
-    let sortOrder;
+    const sortBy = searchParams.get('sortBy') || 'created_at';
+    let sortOrder: 'asc' | 'desc' | undefined;
     if (
       searchParams.get('sortOrder') === 'asc' ||
       searchParams.get('sortOrder') === 'desc'
     ) {
-      sortOrder = searchParams.get('sortOrder') as
-        | 'asc'
-        | 'desc';
+      sortOrder = searchParams.get('sortOrder') as 'asc' | 'desc';
     }
 
-    // ✅ Call service with clean params
     const { data, count } = await fetchProducts({
       page,
       limit,
@@ -53,7 +45,6 @@ export async function GET(req: Request) {
       sortOrder,
     });
 
-    // ✅ Respond safely
     return NextResponse.json({
       products: data,
       total: count ?? 0,
@@ -62,24 +53,18 @@ export async function GET(req: Request) {
       totalPages: count ? Math.ceil(count / limit) : 1,
     });
   } catch (error) {
-    console.error('Error fetching user:', error);
-    return NextResponse.json(
-      { success: false, error: 'Server error' },
-      { status: 500 }
-    );
+    console.error('Error fetching products:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    const productData = req.body;
+    const productData = await req.json();
     const newProduct = await createProduct(productData);
     return NextResponse.json(newProduct);
   } catch (error) {
-    console.error('Error fetching user:', error);
-    return NextResponse.json(
-      { success: false, error: 'Server error' },
-      { status: 500 }
-    );
+    console.error('Error creating product:', error);
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }

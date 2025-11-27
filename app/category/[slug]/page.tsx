@@ -1,37 +1,3 @@
-// import { supabase } from "@/lib/supabase";
-// import { Product } from "@/type";
-// import ProductCard from "@/ui/components/ProductCard";
-
-// export default async function CategoryPage({ params }: { params: { slug: string } }) {
-//   const { slug } = params;
-//   const { data: category } = await supabase
-//     .from("categories")
-//     .select("*")
-//     .eq("slug", slug)
-//     .single();
-
-//   const { data: products } = await supabase
-//     .from("products")
-//     .select("*")
-//     .eq("category", slug);
-
-//   return (
-//     <main>
-//       <h1 className="text-2xl font-bold">{category.title}</h1>
-//       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-//         {products?.map((product: Product) => (
-//           <ProductCard key={product.id} product={product} />
-//         ))}
-//       </div>
-//     </main>
-//   );
-// }
-
-
-
-
-
-
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/type";
 import ProductCard from "@/ui/components/ProductCard";

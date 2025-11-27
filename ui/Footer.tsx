@@ -1,35 +1,35 @@
-'use client;';
-import Link from 'next/link';
-import Container from './Container';
-import { FaEnvelope, FaPhone,} from 'react-icons/fa';
+"use client;";
+import Link from "next/link";
+import Container from "./Container";
+import { FaEnvelope, FaPhone } from "react-icons/fa";
 import {
   FaFacebook,
   FaInstagram,
   FaLinkedin,
   FaWhatsapp,
   FaTwitter,
-  FaTiktok
-} from 'react-icons/fa';
+  FaTiktok,
+} from "react-icons/fa";
 
 const customerService = [
-  { title: 'Warranty', to: '/warranty' },
-  { title: 'Delivery', to: '/delivery' },
-  { title: 'Returns', to: '/returns' },
+  { title: "Warranty", to: "/warranty" },
+  { title: "Delivery", to: "/delivery" },
+  { title: "Returns", to: "/returns" },
 ];
 const myAccount = [
   {
-    title: 'Login/Register',
-    to: '/account/login-register',
+    title: "Login/Register",
+    to: "/account/login-register",
   },
-  { title: 'Orders', to: '/account/orders' },
-  { title: 'Wishlist', to: '/wishlist' },
-  { title: 'Saved Address', to: '/account/saved-address' },
+  { title: "Orders", to: "/account/orders" },
+  { title: "Wishlist", to: "/wishlist" },
+  { title: "Saved Address", to: "/account/saved-address" },
 ];
 
 const support = [
-  { title: 'About Us', to: '/about-us' },
-  { title: 'Contact Us', to: '/contact-us' },
-  { title: 'Faqs', to: '/faqs' },
+  { title: "About Us", to: "/about-us" },
+  { title: "Contact Us", to: "/contact-us" },
+  { title: "Faqs", to: "/faqs" },
 ];
 
 const Footer = () => {
@@ -46,28 +46,56 @@ const Footer = () => {
               alt="logo"
               className="w-50 invert"
             />
-            <div className="flex flex-col sm:flex-row">
-              <p>
-                20, Urata/Mann Street, Off Wetheral Road.{' '}
-                <br /> Owerri, Imo state, <br />
-                Nigeria.
-              </p>
-              <div className="h-[0.1px] bg-(--color-skyBlue)/50 w-[150px] my-5 sm:w-[0.1px] sm:h-[75px] sm:mx-5 sm:my-0 "></div>
-              <p>
-                12, Tetlow Road. <br /> Owerri, Imo state,{' '}
-                <br />
-                Nigeria.
-              </p>
-            </div>
+<div className="flex flex-col sm:flex-row">
+
+  <a
+    href="https://www.google.com/maps/search/?api=1&query=juniorseastechnologies+20+Urata+Street%2C+Owerri%2C+Imo+State"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:underline"
+  >
+    20, Urata/Mann Street, Off Wetheral Road. <br />
+    Owerri, Imo State, <br />
+    Nigeria.
+  </a>
+
+  <div className="h-[0.1px] bg-(--color-skyBlue)/50 w-[150px] my-5 sm:w-[0.1px] sm:h-[75px] sm:mx-5 sm:my-0"></div>
+
+ 
+  <a
+    href="https://www.google.com/maps/search/?api=1&query=12+Tetlow+Road%2C+Owerri%2C+Imo+State"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="hover:underline"
+  >
+    12, Tetlow Road. <br />
+    Owerri, Imo State, <br />
+    Nigeria.
+  </a>
+</div>
+
           </div>
           <div className="py-2">
             <div className="flex items-center space-x-2">
               <FaEnvelope className="text-xl text-blue-500" />
-              <span>juniorseastecnologies@gmail.com</span>
+              <span >
+                {" "}
+                <a
+                  href="mailto:juniorseastecnologies@gmail.com?subject=Inquiry&body=Hello, I want to know more about..."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  juniorseastecnologies@gmail.com
+                </a>{" "}
+              </span>
             </div>
             <div className="flex items-center space-x-2 pt-1">
               <FaPhone className="text-xl text-green-500" />
-              <span>08035057225, 08106165292</span>
+              <span className="flex gap-5">
+                <a href="tel:+2348035057225">0803 505 7225,</a>
+              <a href="sms:+2348106165292">0810 616 5292</a>
+              </span>
+              
             </div>
           </div>
         </div>
@@ -116,8 +144,19 @@ const Footer = () => {
       </Container>
       <Container>
         <div className="h-0.5 bg-(--color-skyBlue)/50 w-full"></div>
-        <div className="flex flex-col gap-5 items-center sm:flex-row justify-around md:flex-row pt-4">
+        <div className="flex flex-col gap-2 items-center sm:flex-row justify-around md:flex-row pt-4">
           <p>@2025 Junior Seas. All Rights Reserved.</p>
+          <div className="flex flex-col items-center gap-0 mb-5">
+            <p>Need a Website?</p>
+            <a
+              href="https://ip-webcrafts.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Contact Me for Web Dev Services&#33;
+            </a>
+          </div>
+
           <div className="flex space-x-4">
             <a
               href="https://www.facebook.com/share/17S9sFug74/?mibextid=wwXIfr"
@@ -138,7 +177,7 @@ const Footer = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-             <FaTiktok className="text-2xl text-[#69C9D0] hover:text-[#EE1D52] transition" />
+              <FaTiktok className="text-2xl text-[#69C9D0] hover:text-[#EE1D52] transition" />
             </a>
             <a
               href="https://www.linkedin.com/company/juniorseastech/"

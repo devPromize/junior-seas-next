@@ -30,12 +30,12 @@ const highlightSections: HighlightItem[] = [
 // ===== Helper Renderers for Reuse =====
 const ImageGroupOne = () => (
   <Container>
-    <div className="flex gap-4 flex-col md:flex-row">
+    <div className="flex gap-4 flex-col md:flex-row bg-black/5 p-4  rounded-lg">
       <div className="flex gap-4">
-        <HomeFeatureImgs src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png" alt="ANC Earphones" />
-        <HomeFeatureImgs src="/assets/js-imgs/Home-Smart-Watches-768x768.png" alt="Smart Watches" />
+        <HomeFeatureImgs src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png" alt="ANC Earphones" searchQuery="earphones"/>
+        <HomeFeatureImgs src="/assets/js-imgs/Home-Smart-Watches-768x768.png" alt="Smart Watches" searchQuery="smart watch" />
       </div>
-      <HomeFeatureImgs src="/assets/js-imgs/uk-used-iphones-img.jpeg" alt="UK Used iPhones" />
+      <HomeFeatureImgs src="/assets/js-imgs/uk-used-iphones-img.jpeg" alt="UK Used iPhones" searchQuery="iphones" />
     </div>
   </Container>
 );
@@ -43,9 +43,9 @@ const ImageGroupOne = () => (
 const ImageGroupTwo = () => (
   <Container>
     <div className="flex gap-4 flex-col md:flex-row">
-      <HomeFeatureImgs src="/assets/js-imgs/S25-Ultra-Infographic-768x922.jpg" alt="S25 Ultra" />
-      <HomeFeatureImgs src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png" alt="Google Pixel 9" />
-      <HomeFeatureImgs src="/assets/js-imgs/Authentic-Apple-Accessories-768x922.png" alt="Apple Accessories" />
+      <HomeFeatureImgs src="/assets/js-imgs/S25-Ultra-Infographic-768x922.jpg" alt="S25 Ultra" searchQuery='S25 Ultra'/>
+      <HomeFeatureImgs src="/assets/js-imgs/Google-Pixel-9-Series-768x922.png" alt="Google Pixel 9" searchQuery="Google Pixel 9" />
+      <HomeFeatureImgs src="/assets/js-imgs/Authentic-Apple-Accessories-768x922.png" alt="Apple Accessories" searchQuery="Apple" />
     </div>
   </Container>
 );

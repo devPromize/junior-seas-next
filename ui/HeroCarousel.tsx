@@ -12,6 +12,7 @@ import { useHeroCarousel } from '../hooks/useHeroCarousel';
 import HeroCarouselSkeleton from './components/HeroCrouselSkeleton';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface Slide {
   id: number;
@@ -22,6 +23,14 @@ interface Slide {
 
 const HeroCarousel = () => {
   const { data = [], isLoading, error } = useHeroCarousel();
+
+const router = useRouter();
+
+
+const handleSlideClick = (title: string) => {
+router.push(`/search?q=${encodeURIComponent(title)}`);
+};
+
   return isLoading ? (
     <HeroCarouselSkeleton />
   ) : error ? (
@@ -45,7 +54,7 @@ const HeroCarousel = () => {
       >
         {data.map((slide: Slide) => (
           <SwiperSlide key={slide.id}>
-            <Link href={`/products/base/${slide.id}`}>
+            <Link href={`/search?q=${encodeURIComponent(slide.title)}`}>
               <div className="w-full h-full relative bg-[--color-columbia-blue]">
                 <Image
                   fill
