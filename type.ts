@@ -20,6 +20,7 @@ export interface HighlightsType {
   // src/types/product.ts
 
 export interface Variant {
+  id: string | undefined;
   color?: string;
   ram?: string;
   rom?: string;

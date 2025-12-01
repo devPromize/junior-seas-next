@@ -1,86 +1,67 @@
 'use client';
 
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { FaHeart } from 'react-icons/fa';
-import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishListContext';
+import { useCart } from '@/context/CartContext';
+import { useWishlist, WishlistItem } from '@/context/WishListContext';
 import { Product } from '@/type';
 import Link from 'next/link';
+import VariantPickerModal from '@/ui/VariantPickerModal';
 
 interface Props {
   product: Product;
   sectionKey?: string; // optional, helps with unique keys
 }
 
-const ProductCard: FC<Props> = ({
-  product,
-  sectionKey,
-}) => {
+const ProductCard: FC<Props> = ({ product, sectionKey }) => {
   const { addToCart } = useCart();
-  const {
-    wishlistItems = [],
-    addToWishlist,
-    removeFromWishlist,
-  } = useWishlist();
-
-  // wishlist
-  const wishlistIds = useMemo(
-    () =>
-      new Set(
-        wishlistItems.map((it: any) => String(it._id))
-      ),
-    [wishlistItems]
-  );
+  const { wishlistItems = [], addToWishlist, removeFromWishlist } = useWishlist();
 
   const productKey = String(
-    product._id ??
-      product.id ??
-      product.slug ??
-      `${sectionKey}-${product.name}`
+    product._id ?? product.id ?? product.slug ?? `${sectionKey}-${product.name}`
+  );
+
+  const wishlistIds = useMemo(
+    () => new Set(wishlistItems.map((it: any) => String(it._id))),
+    [wishlistItems]
   );
   const isWishlisted = wishlistIds.has(productKey);
 
-  const toggleWishlist = () => {
-    const firstVariant =
-      (product.variants && product.variants[0]) || null;
-    const item = {
-      _id: productKey,
-      name: product.name,
-      price: String(firstVariant?.price ?? '0'),
-      image:
-        firstVariant?.image ??
-        firstVariant?.images?.[0] ??
-        (Array.isArray(product.images)
-          ? product.images[0]
-          : undefined) ??
-        '/placeholder.png',
-    };
-    if (isWishlisted) {
-      removeFromWishlist(item._id);
-    } else {
-      addToWishlist(item);
-    }
+const toggleWishlist = () => {
+  const fullItem: WishlistItem = {
+    ...product,
+    _id: productKey,
+    variants: product.variants || [],
+
+    // fix images type
+    images: Array.isArray(product.images) ? product.images : undefined,
+
+    // fallback price
+    price: product.price || product.variants?.[0]?.price || 0,
+
+    // always safe main image
+    image:
+      (Array.isArray(product.images) && product.images[0]) ||
+      product.variants?.[0]?.image ||
+      "/placeholder.png",
   };
 
-  // images
+  if (isWishlisted) removeFromWishlist(productKey);
+  else addToWishlist(fullItem);
+};
+
+
+
+  // main image
   const mainImage =
     product?.variants?.[0]?.image ??
     product?.variants?.[0]?.images?.[0] ??
-    (Array.isArray(product.images)
-      ? product.images[0]
-      : undefined) ??
-    '/placeholder.png';
+    (Array.isArray(product.images) ? product.images[0] : '/placeholder.png');
 
-  // price
-  const priceNumbers = (product.variants ?? []).map((v) =>
-    Number(v?.price ?? 0)
-  );
-  const minPrice = priceNumbers.length
-    ? Math.min(...priceNumbers)
-    : 0;
-  const maxPrice = priceNumbers.length
-    ? Math.max(...priceNumbers)
-    : 0;
+  // price label
+  const priceNumbers = (product.variants ?? []).map((v) => Number(v?.price ?? 0));
+  const minPrice = priceNumbers.length ? Math.min(...priceNumbers) : 0;
+  const maxPrice = priceNumbers.length ? Math.max(...priceNumbers) : 0;
   const priceLabel =
     minPrice === maxPrice
       ? `₦${minPrice.toLocaleString()}`
@@ -89,32 +70,61 @@ const ProductCard: FC<Props> = ({
   // stock
   const isOutOfStock =
     product.inStock === false ||
-    (Array.isArray(product.variants) &&
-      product.variants.every(
-        (v) => Number(v?.stock ?? 0) === 0
-      ));
+    (Array.isArray(product.variants) && product.variants.every((v) => Number(v?.stock ?? 0) === 0));
+
+  // modal state
+  const [showModal, setShowModal] = useState(false);
+
+  const handleQuickAdd = () => {
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+
+    if (variants.length === 0) {
+      // no variants -> add product fallback
+      addToCart({
+        _id: productKey,
+        productId: product.id ?? product._id,
+        variantId: null,
+        name: product.name,
+        price: Number((product as any).price || 0),
+        image: mainImage,
+        quantity: 1,
+        meta: {},
+      });
+      return;
+    }
+
+    if (variants.length === 1) {
+      const v = variants[0];
+      addToCart({
+        _id: `${productKey}::${v.id ?? v.color ?? Math.random().toString(36).slice(2)}`,
+        productId: product.id ?? product._id,
+        variantId: v.id ?? null,
+        name: product.name,
+        price: Number(v.price || 0),
+        image: v.image ?? mainImage,
+        quantity: 1,
+        meta: { ram: v.ram, rom: v.rom, color: v.color },
+      });
+      return;
+    }
+
+    // multiple variants -> open modal
+    setShowModal(true);
+  };
 
   return (
     <div
       className="relative flex flex-col justify-between h-full group border rounded p-3 border-(--color-columbia-blue) bg-black/1 
-       hover:shadow-(--card-box-shadow) hover:transform-(--card-hover-transform) transition-transform duration-400 ease-in-out"
+        hover:shadow-(--card-box-shadow) hover:transform-(--card-hover-transform) transition-transform duration-400 ease-in-out"
     >
       {/* Wishlist */}
       <span
         onClick={toggleWishlist}
-        title={
-          isWishlisted
-            ? 'Remove from Wishlist'
-            : 'Add to Wishlist'
-        }
+        title={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
         className="absolute top-2 right-2 z-10 cursor-pointer group-hover:opacity-100 transition-opacity"
       >
         <FaHeart
-          className={
-            isWishlisted
-              ? 'text-red-500'
-              : 'text-gray-400 hover:text-red-500'
-          }
+          className={isWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}
         />
       </span>
 
@@ -135,44 +145,24 @@ const ProductCard: FC<Props> = ({
       )}
 
       {/* Image */}
-      <Link
-        href={`/products/${
-          product._id ?? product.id ?? product.slug
-        }`}
-      >
-        <img
-          src={mainImage}
-          alt={product.name}
-          className="w-full h-40 object-contain mb-1"
-        />
+      <Link href={`/products/${product._id ?? product.id ?? product.slug}`}>
+        <img src={mainImage} alt={product.name} className="w-full h-40 object-contain mb-1" />
       </Link>
 
       {/* Name + Price */}
-      <h3 className="mt-2 font-medium text-sm line-clamp-2 h-[3rem]">
-        {product.name}
-      </h3>
+      <h3 className="mt-2 font-medium text-sm line-clamp-2 h-[3rem]">{product.name}</h3>
       <p className="text-sm text-gray-600">{priceLabel}</p>
 
       {/* Actions */}
       <div className="mt-3 flex gap-2">
         <Link
-          href={`/products/${
-            product._id ?? product.id ?? product.slug
-          }`}
+          href={`/products/${product._id ?? product.id ?? product.slug}`}
           className="flex-1 text-center py-1 px-2 text-sm border border-(--color-navyBlue) bg-(--color-white) text-(--color-navyBlue) rounded hover:border-(--color-navyBlue)/90"
         >
           View
         </Link>
         <button
-          onClick={() =>
-            addToCart({
-              ...product,
-              _id: productKey,
-              quantity: 1,
-              price: '',
-              image: mainImage,
-            })
-          }
+          onClick={handleQuickAdd}
           disabled={isOutOfStock}
           className={`flex-1 py-1 px-2 text-sm rounded ${
             isOutOfStock
@@ -183,6 +173,30 @@ const ProductCard: FC<Props> = ({
           Cart
         </button>
       </div>
+
+      {/* Variant Picker Modal */}
+      {showModal && (
+        <VariantPickerModal
+          product={product}
+          onClose={() => setShowModal(false)}
+          onConfirm={(variantIndex) => {
+            const v = product.variants?.[variantIndex];
+            if (!v) return;
+
+            addToCart({
+              _id: `${productKey}::${v.id ?? v.color ?? Math.random().toString(36).slice(2)}`,
+              productId: product.id ?? product._id,
+              variantId: v.id ?? null,
+              name: product.name,
+              price: Number(v.price || 0),
+              image: v.image ?? mainImage,
+              quantity: 1,
+              meta: { ram: v.ram, rom: v.rom, color: v.color },
+            });
+            setShowModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

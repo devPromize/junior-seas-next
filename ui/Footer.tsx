@@ -153,7 +153,7 @@ const Footer = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Contact Me for Web Dev Services&#33;
+              Contact Me for Web Services&#33;
             </a>
           </div>
 

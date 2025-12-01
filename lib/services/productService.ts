@@ -1,4 +1,3 @@
-//=======================================================
 // lib/services/productService.ts
 'use server';
 import slugify from 'slugify';
@@ -18,13 +17,36 @@ export interface ProductQueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-/* Fetch Single Product */
+// inside lib/services/productService.ts — replace fetchSingleProduct
 export const fetchSingleProduct = async (productId: number | string) => {
   const supabase = await createClient();
   const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
   if (error) throw error;
-  return data;
+
+  const product = data as any;
+  // Ensure variants and images are arrays (handle stringified JSON stored by mistake)
+  try {
+    if (typeof product.variants === 'string') {
+      product.variants = JSON.parse(product.variants);
+    }
+  } catch (e) {
+    // fallback to empty array
+    product.variants = [];
+  }
+
+  try {
+    if (typeof product.images === 'string') {
+      product.images = JSON.parse(product.images);
+    }
+  } catch (e) {
+    product.images = Array.isArray(product.images) ? product.images : [];
+  }
+
+  return product;
 };
+
+
+
 
 /* Fetch Products — robust variant matching + pagination */
 export const fetchProducts = async (params: ProductQueryParams = {}) => {
@@ -62,15 +84,7 @@ export const fetchProducts = async (params: ProductQueryParams = {}) => {
   const requestedRom = rom ? normalizeRom(rom) : NaN;
   const requestedColor = color ? normalizeColor(color) : '';
 
-  // // --- Fetch base rows from Supabase (no JSONB cs filters) ---
-  // let query = supabase.from('products').select('*');
-  // if (category) query = query.ilike('category', `%${category}%`);
-  // if (search) query = query.ilike('name', `%${search}%`);
-  // query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-
-
-
-  let query = supabase.from('products').select('*');
+let query = supabase.from('products').select('*');
 
 if (category) query = query.ilike('category', `%${category}%`);
 if (search) query = query.ilike('name', `%${search}%`);
