@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useWishlist } from "../context/WishListContext";
 import { useCart } from "../context/CartContext";
 import VariantPickerModal from "@/ui/VariantPickerModal";
+import { Product } from '@/type';
+import Link from "next/link";
 
 export default function Wishlist() {
   const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
@@ -92,14 +94,17 @@ export default function Wishlist() {
             {wishlistItems.map((item) => (
               <div
                 key={item._id}
-                className="border p-4 rounded flex items-center justify-between"
+                className="border border-(--color-columbia-blue) bg-black/1 p-4 rounded flex items-center justify-between gap-4"
               >
                 <div className="flex items-center space-x-4">
-                  <img
+                  <Link href={`/products/${ item._id ?? item.id}`}>
+                   <img
                     src={item.image}
                     alt={item.name}
                     className="w-16 h-16 object-cover"
                   />
+                 </Link>
+                 
                   <div>
                     <h3 className="font-medium">{item.name}</h3>
                     <p className="text-sm text-gray-600">
@@ -108,17 +113,17 @@ export default function Wishlist() {
                   </div>
                 </div>
 
-                <div className="space-x-2">
+                <div className="flex items-center space-x-2 whitespace-nowrap">
                   <button
                     onClick={() => handleAddToCart(item)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                    className="bg-(--color-navyBlue)/90 text-white hover:bg-(--color-navyBlue)/80 px-3 py-1 rounded text-sm cursor-pointer"
                   >
                     Add to Cart
                   </button>
 
                   <button
                     onClick={() => removeFromWishlist(item._id)}
-                    className="text-red-500 border border-red-500 px-3 py-1 rounded hover:bg-red-50 text-sm"
+                    className="text-red-500 border border-red-500 px-3 py-1 rounded hover:bg-red-50 text-sm cursor-pointer"
                   >
                     Remove
                   </button>
