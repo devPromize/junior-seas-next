@@ -1,48 +1,10 @@
-// 'use client';
-// import { Product } from '@/type';
-
-// const ProductDetail = ({
-//   product,
-// }: {
-//   product: Product;
-// }) => {
-//   const mainImage =
-//     product?.variants?.[0]?.image ??
-//     product?.variants?.[0]?.images?.[0] ??
-//     (Array.isArray(product.images)
-//       ? product.images[0]
-//       : undefined) ??
-//     '/placeholder.png';
-//   return (
-//     <div className="p-6">
-//       <img
-//         src={mainImage}
-//         alt={product.name}
-//         className="w-64 mx-auto"
-//       />
-//       <h1 className="text-2xl font-bold mt-4">
-//         {product.name}
-//       </h1>
-//       <p className="text-lg text-gray-700 mt-2">
-//         {product.price}
-//       </p>
-//       <p className="mt-4">{product.description}</p>
-//     </div>
-//   );
-// };
-
-// export default ProductDetail;
-
-
-
-
-
 // app/products/ProductDetail.tsx
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/type';
 import { useCart } from '@/context/CartContext';
 import VariantPickerModal from '@/ui/VariantPickerModal';
+
 
 type Props = { product: Product };
 
@@ -68,10 +30,9 @@ export default function ProductDetail({ product }: Props) {
     : // fallback to product.price if you have it (ensure numeric)
       Number((product as any).price || 0);
 
-  const openVariantModal = () => {
-    // open modal logic handled by VariantPickerModal local state; we'll just show it
-    setShowModal(true);
-  };
+  // const openVariantModal = () => {
+  //   setShowModal(true);
+  // };
 
   const [showModal, setShowModal] = useState(false);
 
@@ -99,6 +60,17 @@ export default function ProductDetail({ product }: Props) {
     addToCart(cartItem);
   };
 
+  useEffect(() => {
+  if (selectedVariantIndex !== null) {
+    const el = document.getElementById('product-detail-top');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+}, [selectedVariantIndex]);
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -109,15 +81,14 @@ export default function ProductDetail({ product }: Props) {
         <div>
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <p className="text-lg text-gray-700 mt-2">₦{displayPrice.toLocaleString()}</p>
-          <p className="mt-4 whitespace-pre-line">{product.description}</p>
-
+         
           <div className="mt-6">
             {variants.length === 0 ? (
               <p className="text-sm text-gray-500">No variant data available.</p>
             ) : (
               <>
-                <label className="block font-medium mb-2">Select variant</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block font-medium mb-3 underline decoration-yellow-500 underline-offset-5">Select variant</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {variants.map((v: any, idx: number) => {
                     const isSelected = idx === selectedVariantIndex;
                     const label = [v.ram, v.rom, v.color].filter(Boolean).join(' • ') || `Variant ${idx + 1}`;
@@ -125,7 +96,7 @@ export default function ProductDetail({ product }: Props) {
                       <button
                         key={idx}
                         onClick={() => setSelectedVariantIndex(idx)}
-                        className={`px-3 py-2 border rounded ${isSelected ? 'bg-blue-600 text-white' : 'bg-white'}`}
+                        className={`px-3 py-2 border rounded cursor-pointer border-(--color-columbia-blue)   ${isSelected ? ' bg-(--color-navyBlue) text-white' : 'bg-white'}`}
                       >
                         {label} — ₦{Number(v.price || 0).toLocaleString()}
                       </button>
@@ -139,17 +110,25 @@ export default function ProductDetail({ product }: Props) {
           <div className="mt-6 flex gap-3">
             <button
               onClick={handleAddToCart}
-              className="px-4 py-2 bg-green-600 text-white rounded"
+              className="px-4 py-2  bg-(--color-navyBlue) hover:bg-(--color-navyBlue)/90 duration-200 text-white rounded cursor-pointer"
             >
               Add to cart
             </button>
 
             {variants.length > 1 && (
-              <button onClick={() => setShowModal(true)} className="px-4 py-2 border rounded">
-                Pick variant (modal)
+              <button onClick={() => setShowModal(true)} className="px-4 py-2 border rounded cursor-pointer">
+                Pick variant 
               </button>
             )}
           </div>
+
+          <div className='mt-10'>
+<label className="block font-medium mb-2 underline decoration-yellow-500 underline-offset-5">Description</label>
+ <p className=" whitespace-pre-line">{product.description}</p>
+          </div>
+          
+
+
         </div>
       </div>
 
@@ -160,8 +139,10 @@ export default function ProductDetail({ product }: Props) {
           onConfirm={(variantIndex: number) => {
             setSelectedVariantIndex(variantIndex);
             setShowModal(false);
-            // optional: add to cart immediately after picking
-            // handleAddToCart();
+            
+            // Scroll to top so the user sees the new variant image immediately
+
+
           }}
         />
       )}

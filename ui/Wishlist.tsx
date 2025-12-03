@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useWishlist } from "../context/WishListContext";
 import { useCart } from "../context/CartContext";
 import VariantPickerModal from "@/ui/VariantPickerModal";
-import { Product } from '@/type';
 import Link from "next/link";
 
 export default function Wishlist() {
@@ -84,7 +83,7 @@ export default function Wishlist() {
         />
       )}
 
-      <h2 className="text-xl font-bold mb-4">Your Wishlist</h2>
+      <h2 className="text-xl mb-4 font-bold m-5 text-center underline decoration-yellow-500 underline-offset-8">Your Wishlist</h2>
 
       {wishlistItems.length === 0 ? (
         <p className="text-center py-8">Your wishlist is empty.</p>

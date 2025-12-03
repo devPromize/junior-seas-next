@@ -33,7 +33,7 @@ const Cart = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4">Your Cart</h2>
+      <h2 className="text-xl font-bold mb-4 m-5 text-center underline decoration-yellow-500 underline-offset-8">Your Cart</h2>
 
       {sanitizedCartItems.length === 0 ? (
         <p className="text-center py-8">Your cart is empty.</p>
@@ -53,7 +53,7 @@ const Cart = () => {
                 placeholder="Enter promo code"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                className="border px-3 py-2 w-full rounded"
+                className=" border border-(--color-columbia-blue) bg-gray-100  px-3 py-2 w-full rounded"
               />
               <button
                 onClick={applyPromo}
@@ -64,7 +64,7 @@ const Cart = () => {
             </div>
 
             {/* Price summary section */}
-            <div className="bg-gray-50 p-4 rounded border">
+            <div className="bg-gray-200 p-4 rounded border border-(--color-columbia-blue) ">
               <div className="flex justify-between mb-2">
                 <span>Subtotal:</span>
                 <span>₦{totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -82,13 +82,13 @@ const Cart = () => {
                 <span>₦{discountedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
 
-              <button className="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+              <button className="mt-4 w-full bg-(--color-navyBlue) text-white py-2 rounded hover:bg-(--color-navyBlue)/80 duration-200 cursor-pointer">
                 Proceed to Checkout
               </button>
 
               <button
                 onClick={clearCart}
-                className="mt-2 w-full border border-red-500 text-red-500 py-2 rounded hover:bg-red-50"
+                className="mt-2 w-full border border-red-500 text-red-500 py-2 rounded hover:bg-red-100 cursor-pointer"
               >
                 Clear Cart
               </button>
