@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 import { Product } from "@/type";
 import ProductCard from "@/ui/components/ProductCard";
 

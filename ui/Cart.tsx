@@ -1,13 +1,15 @@
-'use client';
-import { useCart } from '../context/CartContext';
-import { useState } from 'react';
-import CartProductCard from '../ui/CartProductCard';
+"use client";
+import { useCart } from "../context/CartContext";
+import { useState } from "react";
+import CartProductCard from "../ui/CartProductCard";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const Cart = () => {
   const { cartItems, clearCart } = useCart();
-  const [promoCode, setPromoCode] = useState('');
+  const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
-
+  const router = useRouter();
   // Ensure all item prices and quantities are in correct types for display and calculation
   const sanitizedCartItems = cartItems.map((item) => ({
     ...item,
@@ -21,11 +23,11 @@ const Cart = () => {
   );
 
   const applyPromo = () => {
-    if (promoCode.trim().toLowerCase() === 'izupromo') {
+    if (promoCode.trim().toLowerCase() === "izupromo") {
       setDiscount(0.1); // 10% discount
     } else {
       setDiscount(0);
-      alert('Invalid promo code');
+      alert("Invalid promo code");
     }
   };
 
@@ -33,7 +35,9 @@ const Cart = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4 m-5 text-center underline decoration-yellow-500 underline-offset-8">Your Cart</h2>
+      <h2 className="text-xl font-bold mb-4 m-5 text-center underline decoration-yellow-500 underline-offset-8">
+        Your Cart
+      </h2>
 
       {sanitizedCartItems.length === 0 ? (
         <p className="text-center py-8">Your cart is empty.</p>
@@ -55,6 +59,7 @@ const Cart = () => {
                 onChange={(e) => setPromoCode(e.target.value)}
                 className=" border border-(--color-columbia-blue) bg-gray-100  px-3 py-2 w-full rounded"
               />
+
               <button
                 onClick={applyPromo}
                 className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -67,22 +72,37 @@ const Cart = () => {
             <div className="bg-gray-200 p-4 rounded border border-(--color-columbia-blue) ">
               <div className="flex justify-between mb-2">
                 <span>Subtotal:</span>
-                <span>₦{totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span>
+                  ₦
+                  {totalPrice.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Discount:</span>
                 <span className="text-green-600">
                   {discount > 0
-                    ? `-₦${(totalPrice * discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                    : '₦0.00'}
+                    ? `-₦${(totalPrice * discount).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}`
+                    : "₦0.00"}
                 </span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total:</span>
-                <span>₦{discountedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span>
+                  ₦
+                  {discountedTotal.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
               </div>
 
-              <button className="mt-4 w-full bg-(--color-navyBlue) text-white py-2 rounded hover:bg-(--color-navyBlue)/80 duration-200 cursor-pointer">
+              <button
+                onClick={() => router.push("/checkout")}
+                className="mt-4 w-full bg-(--color-navyBlue) text-white font-bold py-2 rounded hover:bg-(--color-navyBlue)/80 duration-200 cursor-pointer"
+              >
                 Proceed to Checkout
               </button>
 
@@ -93,6 +113,14 @@ const Cart = () => {
                 Clear Cart
               </button>
             </div>
+          </div>
+          <div>
+            <Link
+              href="/shop"
+              className="inline-block mt-8 px-6 py-3 bg-(--color-navyBlue) text-white rounded-lg"
+            >
+              Continue Shopping
+            </Link>
           </div>
         </>
       )}
