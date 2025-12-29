@@ -1,46 +1,120 @@
 'use client';
+
 import { useAuth } from '@/hooks/useAuth';
-import { use, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
+import Container from '@/ui/Container';
 
 export default function AccountPage() {
-  const { user } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const res = await fetch(`/api/account/orders?user_id=${user.id}`);
-      const json = await res.json();
-      setOrders(json.orders || []);
-    })();
-  }, [user]);
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  }
 
-  if (!user) return <div className="p-10">Please <a href="/auth/login" className="text-blue-600">log in</a></div>;
+  if (loading) {
+    return (
+      <Container>
+        <p className="py-10 text-center">Loading…</p>
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Container>
+        <div className="max-w-md mx-auto mt-24 text-center p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            Please sign in to access your account
+          </h2>
+
+          <div className="space-y-3">
+            <Link
+              href="/auth/login"
+              className="block bg-(--color-navyBlue) text-white py-3 rounded"
+            >
+              Login
+            </Link>
+
+            <Link
+              href="/auth/signup"
+              className="block border py-3 rounded"
+            >
+              Create an account
+            </Link>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Account</h2>
-      <p className="mb-4">Signed in as <strong>{user.email}</strong></p>
+    <Container>
+      <section className="py-10 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold">
+              My Account
+            </h2>
+            <p className="text-gray-600">
+              Signed in as <strong>{user.email}</strong>
+            </p>
+          </div>
 
-      <h3 className="text-xl font-semibold mt-6">Orders</h3>
-      {orders.length === 0 ? <p className="mt-2">No orders yet</p> : (
-        <div className="mt-2 space-y-3">
-          {orders.map((o:any) => (
-            <div key={o.id} className="border p-3 rounded bg-white">
-              <div className="flex justify-between">
-                <div>
-                  <div className="font-semibold">{o.order_ref}</div>
-                  <div className="text-sm text-gray-600">{new Date(o.created_at).toLocaleString()}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold">{o.payment_status}</div>
-                  <div>₦{(o.amount/100).toLocaleString()}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+          <button
+            onClick={handleLogout}
+            className="text-sm text-red-600 border border-red-200 px-4 py-2 rounded hover:bg-red-50"
+          >
+            Logout
+          </button>
         </div>
-      )}
-    </div>
+
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <Link
+    href="/account/orders"
+    className="border rounded p-5 hover:shadow"
+  >
+    <h3 className="font-semibold mb-1">Orders</h3>
+    <p className="text-sm text-gray-600">
+      View order history and status
+    </p>
+  </Link>
+
+  <Link
+    href="/account/wishlist"
+    className="border rounded p-5 hover:shadow"
+  >
+    <h3 className="font-semibold mb-1">Wishlist</h3>
+    <p className="text-sm text-gray-600">
+      Saved products
+    </p>
+  </Link>
+
+  <Link
+    href="/account/addresses"
+    className="border rounded p-5 hover:shadow"
+  >
+    <h3 className="font-semibold mb-1">Addresses</h3>
+    <p className="text-sm text-gray-600">
+      Shipping information
+    </p>
+  </Link>
+
+  <Link
+    href="/account/profile"
+    className="border rounded p-5 hover:shadow"
+  >
+    <h3 className="font-semibold mb-1">Profile</h3>
+    <p className="text-sm text-gray-600">
+      Edit your personal details
+    </p>
+  </Link>
+</div>
+
+      </section>
+    </Container>
   );
 }

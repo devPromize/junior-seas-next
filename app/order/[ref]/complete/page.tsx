@@ -25,13 +25,6 @@ async function getOrder(ref: string) {
   return res.json();
 }
 
-// export default async function OrderCompletePage({
-//   params,
-// }: {
-//   params: { ref: string };
-// }) {
-//   const order = await getOrder(params.ref);
-
 export default async function OrderCompletePage({
   params,
 }: {

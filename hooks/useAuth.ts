@@ -1,34 +1,12 @@
-// 'use client';
-// import { useState, useEffect } from 'react';
-// import { supabase } from '@/lib/supabaseClient';
-
-// export function useAuth() {
-//   const [user, setUser] = useState<any>(null);
-//   useEffect(() => {
-//     const init = async () => {
-//       const { data } = await supabase.auth.getUser();
-//       setUser(data?.user ?? null);
-//     };
-//     init();
-//     const { data: sub } = supabase.auth.onAuthStateChange((_ev, session) => {
-//       setUser(session?.user ?? null);
-//     });
-//     return () => sub?.subscription.unsubscribe();
-//   }, []);
-//   return { user };
-// }
-
-
-
-
-
-// hooks/useAuth.tsx (client)
+// hooks/useAuth.tsx
 'use client';
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     let mounted = true;
@@ -36,25 +14,25 @@ export function useAuth() {
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       if (!mounted) return;
+
       setUser(data?.user ?? null);
+      setLoading(false); // ✅ auth resolved
     };
+
     init();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
 
     return () => {
       mounted = false;
-      // listener is like { subscription }
-      try {
-        listener?.subscription?.unsubscribe();
-      } catch (err) {
-        // fallback (older versions)
-        (listener as any)?.unsubscribe?.();
-      }
+      listener?.subscription?.unsubscribe();
     };
   }, []);
 
-  return { user };
+  return { user, loading };
 }
