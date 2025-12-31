@@ -3,9 +3,10 @@ import { supabaseServer } from '@/lib/supabaseServer';
 
 export async function GET(
   _req: Request,
-  context: { params: { ref: string } }
+  { params }: { params: Promise<{ ref: string }> }
+ 
 ) {
-  const { ref } = await context.params;
+  const { ref } = await params;
 
   const { data: order, error } = await supabaseServer
     .from('orders')
