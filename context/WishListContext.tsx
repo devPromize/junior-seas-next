@@ -46,38 +46,39 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  // Server sync
-  useEffect(() => {
-    if (syncTimeout.current) clearTimeout(syncTimeout.current);
-    syncTimeout.current = setTimeout(() => syncWishlistToServer(wishlistItems), 600);
-  }, [wishlistItems]);
+  // ======= Server sync =======
+  // useEffect(() => {
+  //   if (syncTimeout.current) clearTimeout(syncTimeout.current);
+  //   syncTimeout.current = setTimeout(() => syncWishlistToServer(wishlistItems), 600);
+  // }, [wishlistItems]);
 
-  const syncWishlistToServer = async (items: WishlistItem[]) => {
-    try {
-      await fetch('/api/wishlist/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      });
-    } catch (err) {
-      console.error('Wishlist sync failed', err);
-    }
-  };
+  // const syncWishlistToServer = async (items: WishlistItem[]) => {
+  //   try {
+  //     await fetch('/api/wishlist/sync', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ items }),
+  //     });
+  //   } catch (err) {
+  //     console.error('Wishlist sync failed', err);
+  //   }
+  // };
 
-  // Merge
-  useEffect(() => {
-    const mergeWishlist = async () => {
-      try {
-        const res = await fetch('/api/wishlist/merge');
-        const data = await res.json();
-        if (data?.mergedWishlist) {
-          setWishlistItems(data.mergedWishlist);
-          localStorage.setItem('wishlist', JSON.stringify(data.mergedWishlist));
-        }
-      } catch {}
-    };
-    mergeWishlist();
-  }, []);
+
+  // ===== Merge ======
+  // useEffect(() => {
+  //   const mergeWishlist = async () => {
+  //     try {
+  //       const res = await fetch('/api/wishlist/merge');
+  //       const data = await res.json();
+  //       if (data?.mergedWishlist) {
+  //         setWishlistItems(data.mergedWishlist);
+  //         localStorage.setItem('wishlist', JSON.stringify(data.mergedWishlist));
+  //       }
+  //     } catch {}
+  //   };
+  //   mergeWishlist();
+  // }, []);
 
   const addToWishlist = (item: WishlistItem) => {
     let added = false;

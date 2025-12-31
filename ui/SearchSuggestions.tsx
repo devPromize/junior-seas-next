@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Product {
   id: number | string;
@@ -17,16 +17,12 @@ interface Props {
   loading: boolean;
   visible: boolean;
   searchText?: string;
-  onSelect?: () => void | null; // called when a suggestion is clicked  a lght bulb idea just came to my mind now, I CAN MAKE THIS ONSELECT
-  // PROPERTY HAVE A FUNCTION THAT RETURNS A COMPONENT,THIS COMPONENT WOULD BE DISPLAY WHAT HAS BEEN SELECTED, THAT IS THE PRODUCT
-  // THAT HAS BEEN SELECTED WILL BE DISPLAYED IN A CERTAIN WAY, NO MATTER WHAT PRODUCT THEY JUST GET DISPLAYED LIKE THAT;
-  //IS THIS A CONVENTION ? WHAT WOULD BE THE CONVENTIONAL AND IDEAL WAY TO DO WHAT I HAVE JUST THOUGHT ABOUT
+  onSelect?: () => void | null;
 }
 
 const escapeRegExp = (s: string) =>
   s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// replace highlightMatch (HTML approach) with a safe renderer that returns React nodes
 const renderHighlighted = (
   text = '',
   query = ''
@@ -54,6 +50,19 @@ const SearchSuggestions: React.FC<Props> = ({
   searchText = '',
   onSelect,
 }) => {
+  // ✅ LOCK BACKGROUND SCROLL — nothing else
+  useEffect(() => {
+    if (visible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
@@ -70,55 +79,41 @@ const SearchSuggestions: React.FC<Props> = ({
           {results.map((product) => {
             const src =
               (product.image as string) ||
-              (Array.isArray(product.images) &&
-                product.images[0]) ||
-              (product.variants &&
-                product.variants[0]?.image) ||
+              (Array.isArray(product.images) && product.images[0]) ||
+              (product.variants && product.variants[0]?.image) ||
               '/placeholder.png';
 
             return (
               <li
                 key={product.id}
-                className="border-b border-b-(--color-skyBlue)  last:border-b-0"
+                className="border-b border-b-(--color-skyBlue) last:border-b-0"
               >
                 <Link
-                  href={
-                    product.id
-                      ? `/products/${product.id}`
-                      : '#'
-                  }
-                  className="flex items-center gap-3 p-3 hover:bg-gray-100"
+                  href={`/products/${product.id}`}
+                  className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer"
                   onClick={() => onSelect?.()}
                 >
                   <img
                     src={src}
                     alt={product.name}
-                    className="w-12 h-12 object-cover rounded-md "
+                    className="w-12 h-12 object-cover rounded-md"
                     onError={(e) => {
-                      (
-                        e.currentTarget as HTMLImageElement
-                      ).src = '/placeholder.png';
+                      (e.currentTarget as HTMLImageElement).src =
+                        '/placeholder.png';
                     }}
                   />
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800 truncate">
-                      {renderHighlighted(
-                        product.name ?? '',
-                        searchText
-                      )}
+                    <p className="text-sm text-gray-800 truncate hover:underline">
+                      {renderHighlighted(product.name ?? '', searchText)}
                     </p>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-gray-500 truncate">
-                        {product.category ??
-                          'Uncategorized'}
+                        {product.category ?? 'Uncategorized'}
                       </span>
                       {product.price != null && (
                         <span className="text-xs text-gray-700 font-medium">
-                          ₦
-                          {Number(
-                            product.price
-                          ).toLocaleString()}
+                          ₦{Number(product.price).toLocaleString()}
                         </span>
                       )}
                     </div>
@@ -138,6 +133,6 @@ const SearchSuggestions: React.FC<Props> = ({
 };
 
 export default SearchSuggestions;
-// This component displays search suggestions based on user input.
-// It highlights matching text and handles loading and empty states.
-// It also ensures accessibility with appropriate roles and attributes.
+// // This component displays search suggestions based on user input.
+// // It highlights matching text and handles loading and empty states.
+// // It also ensures accessibility with appropriate roles and attributes.

@@ -51,9 +51,9 @@ export async function sendOrderEmails({
 
     <h3>Payment Options</h3>
     <p>
-      ACCESS BANK<br/>
+      NOMBANK MFB<br/>
       DE JUNIOR SEAS GLOBAL LTD<br/>
-      0022352270<br/>
+      5307422779<br/>
       Reference: <strong>${order_ref}</strong>
     </p>
 
@@ -79,7 +79,7 @@ await sendEmail({
   html: customerHtml,
   text: `Hello ${customer_name}, your order ${order_ref} has been received. Total: ₦${total_amount.toLocaleString()}.
 Please pay via bank transfer:
-Access Bank - DE JUNIOR SEAS GLOBAL LTD - 0022352270
+NOMBANK MFB - DE JUNIOR SEAS GLOBAL LTD - 5307422779
 Reference: ${order_ref}
 After payment, send proof via WhatsApp: +234 810 616 5292
 Thank you for shopping with us.`

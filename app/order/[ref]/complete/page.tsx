@@ -67,13 +67,13 @@ export default async function OrderCompletePage({
           Bank Transfer Details
         </h2>
         <p>
-          <strong>Bank:</strong> Access Bank
+          <strong>Bank:</strong> NOMBANK MFB
         </p>
         <p>
           <strong>Account Name:</strong> DE JUNIOR SEAS GLOBAL LTD
         </p>
         <p>
-          <strong>Account Number:</strong> 0022352270
+          <strong>Account Number:</strong> 5307422779
         </p>
 
         <p className="mt-3 text-sm text-gray-600">

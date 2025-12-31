@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const WHATSAPP_NUMBER = "2348012345678"; // Replace with your WhatsApp number, country code first, no '+'
+const WHATSAPP_NUMBER = "2348106165292"; // Replace with your WhatsApp number, country code first, no '+'
 
 const WhatsAppChatWidget = () => {
   const [open, setOpen] = useState(false);
