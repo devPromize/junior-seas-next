@@ -1,25 +1,22 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { WishlistProvider } from '@/context/WishListContext';
 import { CartProvider } from '@/context/CartContext';
 import { ToastContainer } from 'react-toastify';
 import ReactQueryProvider from '@/context/ReactQueryProvider';
 import Layout from '@/ui/Layout';
+import Head from 'next/head'; // <-- import Head
+import { Inter } from 'next/font/google';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
   subsets: ['latin'],
+  variable: '--font-inter',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
-  title: 'junior seas',
-  description: 'junior seas ecommerce platform',
+  title: 'Junior Seas Tech',
+  description: 'Junior Seas e-commerce platform for tech products',
 };
 
 export default function RootLayout({
@@ -29,9 +26,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <Head>
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" />
+
+        {/* OG / Social Media */}
+        <meta property="og:title" content="Junior Seas Tech" />
+        <meta property="og:description" content="Shop the best tech products and solutions at Junior Seas Tech" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:url" content="https://juniorseastech.com" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="description" content="Junior Seas e-commerce platform for tech products" />
+      </Head>
+      <body className={`${inter.variable}  antialiased`}>
         <ReactQueryProvider>
           <WishlistProvider>
             <CartProvider>
