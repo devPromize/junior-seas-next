@@ -13,3 +13,20 @@ export async function GET(req: Request) {
     );
   }
 }
+
+
+// // app/api/hero-carousel/route.ts
+// import { NextResponse } from 'next/server';
+// import { supabaseServer } from '@/lib/supabaseServer';
+
+// export async function GET() {
+//   const { data, error } = await supabaseServer
+//     .from('hero_carousel')
+//     .select('*')
+//     .eq('active', true)
+//     .order('position');
+
+//   if (error) return NextResponse.json({ slides: [] });
+
+//   return NextResponse.json({ slides: data });
+// }
