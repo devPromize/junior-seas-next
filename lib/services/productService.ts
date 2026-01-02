@@ -1,7 +1,7 @@
 // lib/services/productService.ts
-'use server';
-import slugify from 'slugify';
-import { createClient } from './server';
+"use server";
+import slugify from "slugify";
+import { createClient } from "./server";
 
 export interface ProductQueryParams {
   page?: number;
@@ -14,19 +14,23 @@ export interface ProductQueryParams {
   color?: string;
   search?: string;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
-// inside lib/services/productService.ts — replace fetchSingleProduct
+
 export const fetchSingleProduct = async (productId: number | string) => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
   if (error) throw error;
 
   const product = data as any;
   // Ensure variants and images are arrays (handle stringified JSON stored by mistake)
   try {
-    if (typeof product.variants === 'string') {
+    if (typeof product.variants === "string") {
       product.variants = JSON.parse(product.variants);
     }
   } catch (e) {
@@ -35,7 +39,7 @@ export const fetchSingleProduct = async (productId: number | string) => {
   }
 
   try {
-    if (typeof product.images === 'string') {
+    if (typeof product.images === "string") {
       product.images = JSON.parse(product.images);
     }
   } catch (e) {
@@ -44,9 +48,6 @@ export const fetchSingleProduct = async (productId: number | string) => {
 
   return product;
 };
-
-
-
 
 /* Fetch Products — robust variant matching + pagination */
 export const fetchProducts = async (params: ProductQueryParams = {}) => {
@@ -62,42 +63,40 @@ export const fetchProducts = async (params: ProductQueryParams = {}) => {
     rom,
     color,
     search,
-    sortBy = 'created_at',
-    sortOrder = 'desc',
+    sortBy = "created_at",
+    sortOrder = "desc",
   } = params;
 
   // ---- Normalizers ----
-  const normalizeRam = (raw?: string) => raw?.toUpperCase().replace(/\s+/g, '') || '';
+  const normalizeRam = (raw?: string) =>
+    raw?.toUpperCase().replace(/\s+/g, "") || "";
   const normalizeRom = (raw?: string) => {
     if (!raw) return NaN;
     const s = String(raw).trim().toUpperCase();
-    if (s.includes('TB')) {
-      const num = parseFloat(s.replace(/[^\d.]/g, '')) || 0;
+    if (s.includes("TB")) {
+      const num = parseFloat(s.replace(/[^\d.]/g, "")) || 0;
       return Math.round(num * 1024);
     }
-    const num = parseFloat(s.replace(/[^\d.]/g, '')) || NaN;
+    const num = parseFloat(s.replace(/[^\d.]/g, "")) || NaN;
     return num;
   };
-  const normalizeColor = (raw?: string) => raw?.trim().toLowerCase() || '';
+  const normalizeColor = (raw?: string) => raw?.trim().toLowerCase() || "";
 
-  const requestedRam = ram ? normalizeRam(ram) : '';
+  const requestedRam = ram ? normalizeRam(ram) : "";
   const requestedRom = rom ? normalizeRom(rom) : NaN;
-  const requestedColor = color ? normalizeColor(color) : '';
+  const requestedColor = color ? normalizeColor(color) : "";
 
-let query = supabase.from('products').select('*');
+  let query = supabase.from("products").select("*");
 
-if (category) query = query.ilike('category', `%${category}%`);
-if (search) query = query.ilike('name', `%${search}%`);
+  if (category) query = query.ilike("category", `%${category}%`);
+  if (search) query = query.ilike("name", `%${search}%`);
 
-// ✅ Only let Supabase sort REAL DB columns
-const dbSortableColumns = ['created_at', 'name', 'brand', 'category'];
+  // ✅ Only let Supabase sort REAL DB columns
+  const dbSortableColumns = ["created_at", "name", "brand", "category"];
 
-if (dbSortableColumns.includes(sortBy)) {
-  query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-}
-
-
-
+  if (dbSortableColumns.includes(sortBy)) {
+    query = query.order(sortBy, { ascending: sortOrder === "asc" });
+  }
 
   const { data: rows, error } = await query;
   if (error) throw error;
@@ -105,21 +104,22 @@ if (dbSortableColumns.includes(sortBy)) {
   let products = Array.isArray(rows) ? rows.filter(Boolean) : [];
 
   // ✅ PRICE SORTING (variants-based)
-if (sortBy === 'price') {
-  products.sort((a: any, b: any) => {
-    const getLowestPrice = (p: any) => {
-      if (!Array.isArray(p?.variants)) return Infinity;
-      const prices = p.variants.map((v: any) => Number(v.price)).filter((n: number) => !isNaN(n));
-      return prices.length ? Math.min(...prices) : Infinity;
-    };
+  if (sortBy === "price") {
+    products.sort((a: any, b: any) => {
+      const getLowestPrice = (p: any) => {
+        if (!Array.isArray(p?.variants)) return Infinity;
+        const prices = p.variants
+          .map((v: any) => Number(v.price))
+          .filter((n: number) => !isNaN(n));
+        return prices.length ? Math.min(...prices) : Infinity;
+      };
 
-    const priceA = getLowestPrice(a);
-    const priceB = getLowestPrice(b);
+      const priceA = getLowestPrice(a);
+      const priceB = getLowestPrice(b);
 
-    return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
-  });
-}
-
+      return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
+    });
+  }
 
   // --- Variant filtering in JS (supports multiple variant objects per product) ---
   if (requestedRam || !isNaN(requestedRom) || requestedColor) {
@@ -170,7 +170,7 @@ if (sortBy === 'price') {
 /* Fetch All Variants for filters (global) */
 export const fetchAllVariants = async () => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('products').select('variants');
+  const { data, error } = await supabase.from("products").select("variants");
   if (error) throw error;
 
   const ramSet = new Set<string>();
@@ -193,7 +193,7 @@ export const fetchAllVariants = async () => {
 /* Fetch Price Bounds (min/max) */
 export const fetchPriceBounds = async () => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('products').select('variants');
+  const { data, error } = await supabase.from("products").select("variants");
   if (error) throw error;
 
   let min = Infinity;
@@ -220,7 +220,11 @@ export const fetchPriceBounds = async () => {
 export const createProduct = async (product: any) => {
   const supabase = await createClient();
   const slug = slugify(product.name, { lower: true });
-  const { data, error } = await supabase.from('products').insert([{ ...product, slug }]).select().single();
+  const { data, error } = await supabase
+    .from("products")
+    .insert([{ ...product, slug }])
+    .select()
+    .single();
   if (error) throw error;
   return data;
 };
@@ -230,7 +234,11 @@ export const updateProduct = async (id: string, product: any) => {
   const supabase = await createClient();
   const updateData = { ...product };
   if (product.name) updateData.slug = slugify(product.name, { lower: true });
-  const { data, error } = await supabase.from('products').update(updateData).eq('id', id).single();
+  const { data, error } = await supabase
+    .from("products")
+    .update(updateData)
+    .eq("id", id)
+    .single();
   if (error) throw error;
   return data;
 };

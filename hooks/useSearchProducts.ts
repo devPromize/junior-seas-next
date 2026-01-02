@@ -11,7 +11,7 @@ const fetchSearchResults = async (query: string) => {
   return products.map((p: any) => ({
     id: p.id,
     name: p.name,
-    slug: p.slug,
+    slug: typeof p.slug === 'string' && p.slug.trim() ? p.slug : null,
     category: p.category,
     variants: [
       {

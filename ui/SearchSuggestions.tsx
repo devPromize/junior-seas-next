@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import React, { useEffect } from 'react';
+import Link from "next/link";
+import React, { useEffect } from "react";
 
 interface Product {
   id: number | string;
   name: string;
-  slug?: string;
+  slug: string;
   image?: string | null;
   images?: string[] | null;
   variants?: any[] | null;
@@ -20,17 +20,13 @@ interface Props {
   onSelect?: () => void | null;
 }
 
-const escapeRegExp = (s: string) =>
-  s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const renderHighlighted = (
-  text = '',
-  query = ''
-): React.ReactNode => {
+const renderHighlighted = (text = "", query = ""): React.ReactNode => {
   if (!query) return text;
   const q = escapeRegExp(query);
-  const splitRegex = new RegExp(`(${q})`, 'gi');
-  const exactMatchRegex = new RegExp(`^${q}$`, 'i');
+  const splitRegex = new RegExp(`(${q})`, "gi");
+  const exactMatchRegex = new RegExp(`^${q}$`, "i");
   const parts = text.split(splitRegex);
   return parts.map((part, i) =>
     exactMatchRegex.test(part) ? (
@@ -47,19 +43,19 @@ const SearchSuggestions: React.FC<Props> = ({
   results,
   loading,
   visible,
-  searchText = '',
+  searchText = "",
   onSelect,
 }) => {
   // ✅ LOCK BACKGROUND SCROLL — nothing else
   useEffect(() => {
     if (visible) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [visible]);
 
@@ -71,9 +67,7 @@ const SearchSuggestions: React.FC<Props> = ({
       role="listbox"
     >
       {loading ? (
-        <p className="p-3 text-gray-500 text-sm">
-          Searching...
-        </p>
+        <p className="p-3 text-gray-500 text-sm">Searching...</p>
       ) : results.length > 0 ? (
         <ul>
           {results.map((product) => {
@@ -81,7 +75,9 @@ const SearchSuggestions: React.FC<Props> = ({
               (product.image as string) ||
               (Array.isArray(product.images) && product.images[0]) ||
               (product.variants && product.variants[0]?.image) ||
-              '/placeholder.png';
+              "/placeholder.png";
+
+            const href = `/products/${product.id}`;
 
             return (
               <li
@@ -89,7 +85,7 @@ const SearchSuggestions: React.FC<Props> = ({
                 className="border-b border-b-(--color-skyBlue) last:border-b-0"
               >
                 <Link
-                  href={`/products/${product.id}`}
+                  href={href}
                   className="flex items-center gap-3 p-3 hover:bg-gray-100 cursor-pointer"
                   onClick={() => onSelect?.()}
                 >
@@ -99,17 +95,17 @@ const SearchSuggestions: React.FC<Props> = ({
                     className="w-12 h-12 object-cover rounded-md"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).src =
-                        '/placeholder.png';
+                        "/placeholder.png";
                     }}
                   />
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 truncate hover:underline">
-                      {renderHighlighted(product.name ?? '', searchText)}
+                      {renderHighlighted(product.name ?? "", searchText)}
                     </p>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-gray-500 truncate">
-                        {product.category ?? 'Uncategorized'}
+                        {product.category ?? "Uncategorized"}
                       </span>
                       {product.price != null && (
                         <span className="text-xs text-gray-700 font-medium">
@@ -124,9 +120,7 @@ const SearchSuggestions: React.FC<Props> = ({
           })}
         </ul>
       ) : (
-        <p className="p-3 text-gray-500 text-sm">
-          No results found
-        </p>
+        <p className="p-3 text-gray-500 text-sm">No results found</p>
       )}
     </div>
   );

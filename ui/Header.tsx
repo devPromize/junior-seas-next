@@ -1,14 +1,5 @@
 "use client";
-import {
-  useState,
-  useRef,
-  useEffect,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-} from "react";
+import { useState, useRef, useEffect } from "react";
 import { IoClose, IoSearchOutline } from "react-icons/io5";
 import { RiUserFill } from "react-icons/ri";
 import { FaChevronDown, FaBars } from "react-icons/fa";
@@ -28,7 +19,6 @@ import { usePathname } from "next/navigation";
 import { useSearchProducts } from "../hooks/useSearchProducts";
 import SearchSuggestions from "../ui/SearchSuggestions";
 import Portal from "../ui/Portal";
-import { useRouter } from "next/navigation";
 
 const headerNavLinks = [
   { title: "Home", to: "/" },
@@ -57,8 +47,6 @@ const Header = () => {
     isLoading: isCategoriesLoading,
     error: categoriesError,
   } = useCategories();
-
-  const router = useRouter();
 
   // Sticky header effect
   useEffect(() => {
@@ -372,38 +360,34 @@ const Header = () => {
                     <p className="text-gray-500 text-center">Searching...</p>
                   ) : searchResults && searchResults.length > 0 ? (
                     <ul className="divide-y divide-gray-100">
-                      {searchResults.map((product: any) => (
-                        <li key={product.id}>
-                          <Link
-                            href={`/product/${product.slug}`}
-                            className="flex items-center gap-3 p-2 hover:bg-gray-100"
-                            onClick={() => setShowSuggestions(false)}
-                          >
-                            <img
-                              src={
-                                product.image ||
-                                product.images?.[0] ||
-                                product.variants?.[0]?.image ||
-                                "/placeholder.png"
-                              }
-                              className="w-12 h-12 rounded object-cover flex-shrink-0"
-                            />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium text-gray-900">
-                                {product.name}
-                              </span>
+                      {searchResults.map((product: any) => {
+                        const href = `/products/${product.id}`;
 
-                              {(product.minPrice || product.maxPrice) && (
-                                <span className="text-xs text-gray-500">
-                                  {product.hasRange
-                                    ? `₦${product.minPrice.toLocaleString()} - ₦${product.maxPrice.toLocaleString()}`
-                                    : `₦${product.minPrice?.toLocaleString()}`}
+                        return (
+                          <li key={product.id}>
+                            <Link
+                              href={href}
+                              className="flex items-center gap-3 p-2 hover:bg-gray-100"
+                              onClick={() => setShowSuggestions(false)}
+                            >
+                              <img
+                                src={
+                                  product.image ||
+                                  product.images?.[0] ||
+                                  product.variants?.[0]?.image ||
+                                  "/placeholder.png"
+                                }
+                                className="w-12 h-12 rounded object-cover flex-shrink-0"
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {product.name}
                                 </span>
-                              )}
-                            </div>
-                          </Link>
-                        </li>
-                      ))}
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : (
                     <p className="text-gray-500 text-center">
