@@ -368,7 +368,12 @@ const Header = () => {
                             <Link
                               href={href}
                               className="flex items-center gap-3 p-2 hover:bg-gray-100"
-                              onClick={() => setShowSuggestions(false)}
+                              onClick={() =>{ 
+                                setShowSuggestions(false);
+                                setMenuOpen(false);
+                              }
+                              }
+                            
                             >
                               <img
                                 src={
