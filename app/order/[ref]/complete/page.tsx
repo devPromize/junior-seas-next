@@ -95,8 +95,7 @@ export default async function OrderCompletePage({
       {/* PAYSTACK OPTIONAL */}
       {order.payment_status !== 'paid' && (
         <Link
-          // href={`/pay/${order.order_ref}`}
-          href={`#`}
+          href={`/pay/${order.order_ref}`}
           className="block text-center border border-black py-3 rounded-lg bg-(--color-navyBlue) text-white hover:bg-(--color-navyBlue)/80 duration-200"
         >
           Pay Now with Card/Paystack
