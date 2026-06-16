@@ -1,8 +1,8 @@
 'use client';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
+// import 'swiper/css';
+// import 'swiper/css/pagination';
+// import 'swiper/css/navigation';
 import {
   Autoplay,
   Pagination,
@@ -55,12 +55,14 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
         {data.map((slide: Slide) => (
           <SwiperSlide key={slide.id}>
             <Link href={`/search?q=${encodeURIComponent(slide.title)}`}>
-              <div className="w-full h-full relative bg-[--color-columbia-blue]">
+              <div className="w-full h-[55vh] lg:h-[70vh] relative bg-[--color-columbia-blue]">
                 <Image
                   fill
                   src={slide.image_url}
                   alt={slide.title}
-                  className="w-full h-full object-cover sm:object-right "
+                  className="w-full h-full object-cover object-center sm:object-right "
+                   sizes="100vw"
+  priority
                 />
                 <div className="absolute bottom-4 left-4 text-white bg-black/80 p-4 rounded-lg max-w-md">
                   <h2 className="text-lg font-bold">

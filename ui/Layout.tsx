@@ -7,7 +7,8 @@ import { Toaster } from 'react-hot-toast';
 import ScrollToTop from './ScrollToTop';
 import BackToTopButton from './components/BackToTopButton';
 import WhatsAppChatWidget from './components/WhatsAppChatWidget';
-import InitialReveal from "@/ui/components/InitialReveal";
+import CookieConsent from './components/CookieConsent';
+import GoogleAnalytics from './components/GoogleAnalytics';
 
 
 const Layout = ({
@@ -18,12 +19,14 @@ const Layout = ({
   return (
     <>
       <Header />
-      <InitialReveal>{children}</InitialReveal>
+      {children}
       <BrandCarousel />
       <ScrollToTop />
       <Footer />
       <BackToTopButton />
       <WhatsAppChatWidget />
+      <CookieConsent />
+      <GoogleAnalytics />
       <Toaster
         position="bottom-right"
         reverseOrder={false}

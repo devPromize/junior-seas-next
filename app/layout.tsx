@@ -4,6 +4,7 @@ import { WishlistProvider } from '@/context/WishListContext';
 import { CartProvider } from '@/context/CartContext';
 import { ToastContainer } from 'react-toastify';
 import ReactQueryProvider from '@/context/ReactQueryProvider';
+import { CookieConsentProvider } from '@/context/CookieConsentContext';
 import Layout from '@/ui/Layout';
 import { Inter } from 'next/font/google';
 
@@ -14,14 +15,14 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: 'Junior Seas Tech',
+  title: 'Junior Seas Technologies - Shop the best tech products and solutions',
   description: 'Junior Seas e-commerce platform for tech products',
   icons: {
     icon: '/icon.png',          // desktop + android
     apple: '/apple-icon.png',   // iOS (CRITICAL)
   },
   openGraph: {
-    title: 'Junior Seas Tech',
+    title: 'Junior Seas Technologies',
     description: 'Shop the best tech products and solutions at Junior Seas Tech',
     images: ['/og-image.png'],
     url: 'https://juniorseastech.com',
@@ -42,21 +43,23 @@ export default function RootLayout({
      
       <body className={`${inter.variable}  antialiased`}>
         <ReactQueryProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <ToastContainer
-                position="top-right"
-                autoClose={1500}
-                newestOnTop={true}
-                hideProgressBar={false}
-                closeOnClick
-                pauseOnHover
-                draggable
-                theme="light"
-              />
-              <Layout>{children}</Layout>
-            </CartProvider>
-          </WishlistProvider>
+          <CookieConsentProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={1500}
+                  newestOnTop={true}
+                  hideProgressBar={false}
+                  closeOnClick
+                  pauseOnHover
+                  draggable
+                  theme="light"
+                />
+                <Layout>{children}</Layout>
+              </CartProvider>
+            </WishlistProvider>
+          </CookieConsentProvider>
         </ReactQueryProvider>
       </body>
     </html>
