@@ -46,7 +46,7 @@ export default function CookiesPage() {
         </div>
       </section>
 
-      <p className="mt-8 text-sm text-gray-600">Last updated: November 2025</p>
+      <p className="mt-8 text-sm text-gray-600">Last updated: June 2026</p>
     </main>
   );
 }

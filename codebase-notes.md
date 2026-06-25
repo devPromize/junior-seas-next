@@ -597,7 +597,7 @@ Added after launch. The whole thing hinges on **one shared piece of state — `c
 
 **The flow:**
 ```
-First visit:  consent = null  → banner shows (page dimmed + scroll locked), GA off
+First visit:  consent = null  → banner shows (non-blocking — user can browse), GA off
 Click Accept: accept() saves 'accepted' → banner hides, GA scripts mount immediately
 Click Reject: reject() saves 'rejected' → banner hides, GA stays off
 Return visit: localStorage read → banner stays hidden, GA matches the prior choice
@@ -606,6 +606,27 @@ Return visit: localStorage read → banner stays hidden, GA matches the prior ch
 > The Cookies **Policy** page (`app/cookies/page.tsx`, `/cookies`) is separate and predates this — the banner just links to it.
 >
 > To re-test the banner in dev: `localStorage.removeItem('cookie-consent')` in the browser console, then refresh.
+
+---
+
+# 16. Vercel deployment gotcha — "live" ≠ "newest commit"
+
+Learned the hard way while shipping the cookie banner. The banner worked locally and the build for it was green on Vercel, yet it wouldn't show on the live domain. Hours of confusion — the cause was **deployment promotion, not code.**
+
+**The key mental model:**
+> Your live domain serves whichever deployment is currently **promoted to Production** — *not* automatically your newest commit.
+
+**What happened:** the banner commit (`2e06d9d`) deployed fine. But afterwards an **older** deployment ("enabled paystack", the commit *before* the banner) got **redeployed**, and that redeploy became the current production deployment — silently rolling the live site back to pre-banner code. The build with the banner still existed and worked when opened directly; the domain just wasn't pointing at it.
+
+**How to spot it in the Deployments list:**
+- A normal deploy shows a **commit hash + branch** (e.g. `2e06d9d · nextjs-migration-branch`).
+- A rollback shows **"Redeploy of `<id>`"** instead — that means it re-ran an *existing* build, not new code. If that's the top (current) production entry, the live site is running whatever that old build contained.
+
+**Two more red herrings that wasted time** (so future-me doesn't chase them again):
+- **`localStorage` is per-origin.** `localhost:3000` and the live domain have *separate* storage, so "works locally, not in prod" can be a stored-choice or a stale-build issue, not a code bug. Read the live value with `localStorage.getItem('cookie-consent')` in the console (`null` = should be showing).
+- **Two GitHub remotes exist:** `origin` → `devPromize/junior-seas-next` (where pushes go), `david` → `UjiDavid/junior-seas` (older). Confirm Vercel is connected to the repo you actually push to (Settings → Git → Connected Git Repository).
+
+**The fix / how to recover:** open the *correct* deployment in the Deployments tab → **⋯ → Promote to Production**. To avoid it: only ever **Redeploy from the top (newest) deployment**, and check it shows your latest commit message before confirming. Redeploying anything lower = a silent rollback.
 
 ---
 

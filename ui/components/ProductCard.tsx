@@ -137,7 +137,7 @@ const toggleWishlist = () => {
 
       {/* Out of Stock */}
       {isOutOfStock && (
-        <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-20 flex items-center justify-center">
+        <div className="absolute top-0 left-0 w-full h-full bg-black/30 z-20 flex items-center justify-center pointer-events-none">
           <span className="bg-red-700/80 text-white whitespace-nowrap text-sm px-10 py-5 rounded-sm shadow-lg">
             Out of Stock
           </span>
