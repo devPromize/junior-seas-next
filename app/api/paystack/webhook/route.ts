@@ -1,7 +1,7 @@
 // app/api/paystack/webhook/route.ts
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { verifyPaystackSignature } from '@/lib/payments';
 
 export async function POST(req: Request) {
   try {
@@ -9,8 +9,7 @@ export async function POST(req: Request) {
     const signature = req.headers.get('x-paystack-signature') || '';
     const secret = process.env.PAYSTACK_SECRET_KEY!;
 
-    const hash = crypto.createHmac('sha512', secret).update(payload).digest('hex');
-    if (hash !== signature) {
+    if (!verifyPaystackSignature(payload, signature, secret)) {
       console.warn('Invalid paystack signature');
       return NextResponse.json({ message: 'Invalid signature' }, { status: 400 });
     }

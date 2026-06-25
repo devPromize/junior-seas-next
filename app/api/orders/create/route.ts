@@ -2,11 +2,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { sendOrderEmails } from '@/lib/SendOrderEmails';
-
-
-function generateOrderRef() {
-  return `JS-${Math.floor(100000 + Math.random() * 900000)}-${new Date().getFullYear()}`;
-}
+import { generateOrderRef, koboToNaira } from '@/lib/payments';
 
 export async function POST(req: Request) {
   try {
@@ -80,7 +76,7 @@ try {
     customer_email: billing.email,
     customer_name: billing.full_name || billing.name || 'Customer',
     items,
-    total_amount: amount / 100,
+    total_amount: koboToNaira(amount),
   });
 } catch (emailErr) {
   console.error('Order email failed:', emailErr);

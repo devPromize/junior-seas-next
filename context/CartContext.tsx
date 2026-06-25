@@ -1,17 +1,14 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import {
+  addItemToCart,
+  calculateTotal,
+  setItemQuantity,
+  type CartItem,
+} from '@/lib/cartLogic';
 
-export interface CartItem {
-  _id: string;
-  productId: string | number;
-  variantId?: string | number | null;
-  name: string;
-  price: number;
-  image?: string;
-  quantity: number;
-  meta?: any;
-}
+export type { CartItem };
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -39,33 +36,16 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const totalPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  const totalPrice = calculateTotal(cartItems);
 
   // Add to cart → returns true if actually added
   const addToCart = (incoming: Partial<CartItem> & { quantity?: number }) => {
-    const id = String(incoming._id);
-    const quantity = Number(incoming.quantity ?? 1);
     let added = false;
 
     setCartItems(prev => {
-      const exists = prev.find(i => i._id === id);
-      if (exists) return prev;
-
-      const newItem: CartItem = {
-        _id: id,
-        productId: incoming.productId ?? id,
-        variantId: incoming.variantId ?? null,
-        name: incoming.name ?? 'Product',
-        price: Number(incoming.price ?? 0),
-        image: incoming.image ?? '/placeholder.png',
-        quantity,
-        meta: incoming.meta ?? {},
-      };
-      added = true;
-      return [...prev, newItem];
+      const result = addItemToCart(prev, incoming);
+      added = result.added;
+      return result.items;
     });
 
     if (added) toast.success(`Added to cart: ${incoming.name}`);
@@ -82,9 +62,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateQuantity = (id: string, quantity: number) => {
     setCartItems(prev => {
-      const updated = prev
-        .map(item => (item._id === id ? { ...item, quantity } : item))
-        .filter(item => item.quantity > 0);
+      const updated = setItemQuantity(prev, id, quantity);
 
       if (!updated.find(item => item._id === id)) {
         toast.warn('Removed from cart');

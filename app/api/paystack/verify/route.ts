@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { sendPaymentSuccessEmail } from '@/lib/sendPaymentSuccessEmail';
+import { koboToNaira } from '@/lib/payments';
 
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
 
@@ -76,7 +77,7 @@ await sendPaymentSuccessEmail({
   customer_email: order.billing.email,
   customer_name: order.billing.full_name,
   items: order.items,
-  total_amount: order.amount / 100,
+  total_amount: koboToNaira(order.amount),
 });
 
 

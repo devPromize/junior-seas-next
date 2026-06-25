@@ -7,6 +7,7 @@ import { useWishlist, WishlistItem } from '@/context/WishListContext';
 import { Product } from '@/type';
 import Link from 'next/link';
 import VariantPickerModal from '@/ui/VariantPickerModal';
+import { getPriceLabel, isProductOutOfStock } from '@/lib/productLogic';
 
 interface Props {
   product: Product;
@@ -59,18 +60,10 @@ const toggleWishlist = () => {
     (Array.isArray(product.images) ? product.images[0] : '/placeholder.png');
 
   // price label
-  const priceNumbers = (product.variants ?? []).map((v) => Number(v?.price ?? 0));
-  const minPrice = priceNumbers.length ? Math.min(...priceNumbers) : 0;
-  const maxPrice = priceNumbers.length ? Math.max(...priceNumbers) : 0;
-  const priceLabel =
-    minPrice === maxPrice
-      ? `₦${minPrice.toLocaleString()}`
-      : `₦${minPrice.toLocaleString()} - ₦${maxPrice.toLocaleString()}`;
+  const priceLabel = getPriceLabel(product);
 
   // stock
-  const isOutOfStock =
-    product.inStock === false ||
-    (Array.isArray(product.variants) && product.variants.every((v) => Number(v?.stock ?? 0) === 0));
+  const isOutOfStock = isProductOutOfStock(product);
 
   // modal state
   const [showModal, setShowModal] = useState(false);

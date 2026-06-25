@@ -2,6 +2,12 @@
 "use server";
 import slugify from "slugify";
 import { createClient } from "./server";
+import {
+  filterByVariant,
+  filterByPrice,
+  sortByPrice,
+  paginate,
+} from "../productLogic";
 
 export interface ProductQueryParams {
   page?: number;
@@ -67,25 +73,6 @@ export const fetchProducts = async (params: ProductQueryParams = {}) => {
     sortOrder = "desc",
   } = params;
 
-  // ---- Normalizers ----
-  const normalizeRam = (raw?: string) =>
-    raw?.toUpperCase().replace(/\s+/g, "") || "";
-  const normalizeRom = (raw?: string) => {
-    if (!raw) return NaN;
-    const s = String(raw).trim().toUpperCase();
-    if (s.includes("TB")) {
-      const num = parseFloat(s.replace(/[^\d.]/g, "")) || 0;
-      return Math.round(num * 1024);
-    }
-    const num = parseFloat(s.replace(/[^\d.]/g, "")) || NaN;
-    return num;
-  };
-  const normalizeColor = (raw?: string) => raw?.trim().toLowerCase() || "";
-
-  const requestedRam = ram ? normalizeRam(ram) : "";
-  const requestedRom = rom ? normalizeRom(rom) : NaN;
-  const requestedColor = color ? normalizeColor(color) : "";
-
   let query = supabase.from("products").select("*");
 
   if (category) query = query.ilike("category", `%${category}%`);
@@ -105,61 +92,18 @@ export const fetchProducts = async (params: ProductQueryParams = {}) => {
 
   // ✅ PRICE SORTING (variants-based)
   if (sortBy === "price") {
-    products.sort((a: any, b: any) => {
-      const getLowestPrice = (p: any) => {
-        if (!Array.isArray(p?.variants)) return Infinity;
-        const prices = p.variants
-          .map((v: any) => Number(v.price))
-          .filter((n: number) => !isNaN(n));
-        return prices.length ? Math.min(...prices) : Infinity;
-      };
-
-      const priceA = getLowestPrice(a);
-      const priceB = getLowestPrice(b);
-
-      return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
-    });
+    products = sortByPrice(products, sortOrder);
   }
 
   // --- Variant filtering in JS (supports multiple variant objects per product) ---
-  if (requestedRam || !isNaN(requestedRom) || requestedColor) {
-    products = products.filter((p: any) => {
-      const variants: any[] = Array.isArray(p?.variants) ? p.variants : [];
-
-      if (!variants.length) return false;
-
-      return variants.some((v: any) => {
-        const vRam = normalizeRam(v?.ram);
-        const vRom = normalizeRom(v?.rom);
-        const vColor = normalizeColor(v?.color);
-
-        const ramMatches = requestedRam ? vRam === requestedRam : true;
-        const romMatches = !isNaN(requestedRom) ? vRom === requestedRom : true;
-        const colorMatches = requestedColor ? vColor === requestedColor : true;
-
-        return ramMatches && romMatches && colorMatches;
-      });
-    });
-  }
+  products = filterByVariant(products, { ram, rom, color });
 
   // --- Price filter in JS (variants may have different prices) ---
-  if (price_min !== undefined || price_max !== undefined) {
-    products = products.filter((p: any) =>
-      (p.variants || []).some((v: any) => {
-        const price = Number(v?.price);
-        if (Number.isNaN(price)) return false;
-        if (price_min !== undefined && price < price_min) return false;
-        if (price_max !== undefined && price > price_max) return false;
-        return true;
-      })
-    );
-  }
+  products = filterByPrice(products, { price_min, price_max });
 
   // --- Pagination after filtering ---
   const total = products.length;
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  const paginated = products.slice(start, end);
+  const paginated = paginate(products, page, limit);
 
   return {
     data: paginated,

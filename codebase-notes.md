@@ -630,6 +630,37 @@ Learned the hard way while shipping the cookie banner. The banner worked locally
 
 ---
 
+# 17. Testing (Vitest)
+
+The project started with **no tests** — everything was checked manually. The first round added **Vitest** (unit/integration) covering the highest-risk logic. There is still **no end-to-end (browser) layer** yet — that's deliberately deferred until the admin-panel / customer-profile work lands.
+
+**Commands:**
+```bash
+npm test            # run once (vitest run)
+npm run test:watch  # re-run on change
+npm run test:coverage
+```
+Config: `vitest.config.ts` (node environment; mirrors the `@/*` → repo-root alias). Tests live in `tests/`.
+
+**The guiding pattern — extract, then test.** Most critical logic was trapped inside `"use server"` modules, API route handlers, or React contexts, which can't be unit-tested in isolation. So the pure logic was lifted into **framework-free modules** (no Supabase / `next/headers` / React / toast), the real code was rewired to import them (**behaviour-preserving — no logic changed**), and the tests target those modules. This means tests exercise the *exact* functions the app runs, not copies that could drift.
+
+**The extracted modules:**
+- **`lib/productLogic.ts`** — normalizers (`normalizeRam/Rom/Color`, incl. TB→GB), `filterByVariant`, `filterByPrice`, `sortByPrice`, `paginate`, `getPriceLabel`, `isProductOutOfStock`. Used by `lib/services/productService.ts` and `ui/components/ProductCard.tsx`.
+- **`lib/payments.ts`** — `verifyPaystackSignature` (HMAC-SHA512), `generateOrderRef` (`JS-XXXXXX-YEAR`, date injectable), `koboToNaira` / `nairaToKobo`. Used by the Paystack webhook/verify and orders/create routes.
+- **`lib/cartLogic.ts`** — `buildCartItem`, `addItemToCart` (dedupe by `_id`), `calculateTotal`, `setItemQuantity`. Used by `context/CartContext.tsx` (which now re-exports `CartItem` from here).
+
+**What's covered (65 tests):**
+- *Product logic* — the unusual bits: `1TB === 1024GB`, "all variant attributes must match the same variant", price min/max boundaries, sort without mutation, pagination edges, price-label single-vs-range, empty-variants = out of stock.
+- *Payments/security* — webhook signature **accepts valid / rejects tampered body, forged secret, empty header, re-serialized JSON**; order_ref format + uniqueness; kobo↔naira round-trip.
+- *Cart* — dedupe refuses duplicate `_id` (numeric vs string treated equal), totals, "quantity ≤ 0 removes the item", no mutation.
+- *Verify route idempotency* (`tests/verifyRoute.test.ts`, mocks Supabase/`fetch`/email/`NextResponse`) — an **already-paid** order is not re-updated and sends **no duplicate email**; happy path sends exactly one; failed/no-reference cases redirect to `/payment/failed`.
+
+**Not yet covered / known gaps:**
+- **End-to-end (Playwright)** browser journeys — deferred.
+- WhatsApp/manual payments have no "mark as paid" path yet (planned with the admin panel). Note: such orders stay `payment_status: 'pending'` — they are **not** marked failed, since the Paystack verify route only runs for actual Paystack redirects.
+
+---
+
 ## Mental model to keep
 
 1. **Folders = routes.** A `page.tsx` is a URL; a `route.ts` under `api/` is a backend endpoint.
