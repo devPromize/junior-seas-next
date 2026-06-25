@@ -44,7 +44,7 @@ const ImageGroupTwo = () => (
   <Container>
     <div className="flex gap-4 flex-col md:flex-row">
       <HomeFeatureImgs src="/assets/js-imgs/S25-Ultra-Infographic-768x922.jpg" alt="S25 Ultra" searchQuery='S25 Ultra'/>
-      <HomeFeatureImgs src="/assets/js-imgs/17-Pro-Max-Banner-for-Mobile.webp" alt="iPhone 17 Pro Max" searchQuery="Iphone 17promax" />
+      <HomeFeatureImgs src="/assets/js-imgs/17-Pro-Max-Banner-for-Mobile.webp" alt="iPhone 17 Pro Max" searchQuery="iphone 17" />
       <HomeFeatureImgs src="/assets/js-imgs/Authentic-Apple-Accessories-768x922.png" alt="Apple Accessories" searchQuery="Apple" />
     </div>
   </Container>
