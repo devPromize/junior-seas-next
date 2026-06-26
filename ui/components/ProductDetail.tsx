@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Product } from '@/type';
 import { useCart } from '@/context/CartContext';
 import VariantPickerModal from '@/ui/VariantPickerModal';
+import { isVariantOutOfStock } from '@/lib/productLogic';
 
 
 type Props = { product: Product };
@@ -25,6 +26,7 @@ export default function ProductDetail({ product }: Props) {
 
   // price label from selected variant or fallback
   const selectedVariant = selectedVariantIndex !== null ? variants[selectedVariantIndex] : null;
+  const selectedVariantOOS = selectedVariant ? isVariantOutOfStock(selectedVariant) : false;
   const displayPrice = selectedVariant
     ? Number(selectedVariant.price || 0)
     : // fallback to product.price if you have it (ensure numeric)
@@ -40,6 +42,11 @@ export default function ProductDetail({ product }: Props) {
     if (!selectedVariant) {
       // if product has no variants, try to add product as single-variant item
       alert('Please select a variant before adding to cart.');
+      return;
+    }
+
+    if (isVariantOutOfStock(selectedVariant)) {
+      // selected variant has no stock — block the add
       return;
     }
 
@@ -75,7 +82,16 @@ export default function ProductDetail({ product }: Props) {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col items-center">
-          <img src={mainImage} alt={product.name} className="w-full max-w-xs object-contain" />
+          <div className="relative w-full max-w-xs">
+            <img src={mainImage} alt={product.name} className="w-full object-contain" />
+            {selectedVariantOOS && (
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                <span className="bg-red-700/80 text-white whitespace-nowrap text-sm px-8 py-4 rounded-sm shadow-lg">
+                  Out of Stock
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -91,14 +107,20 @@ export default function ProductDetail({ product }: Props) {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {variants.map((v: any, idx: number) => {
                     const isSelected = idx === selectedVariantIndex;
+                    const oos = isVariantOutOfStock(v);
                     const label = [v.ram, v.rom, v.color].filter(Boolean).join(' • ') || `Variant ${idx + 1}`;
                     return (
                       <button
                         key={idx}
                         onClick={() => setSelectedVariantIndex(idx)}
-                        className={`px-3 py-2 border rounded cursor-pointer border-(--color-columbia-blue)   ${isSelected ? ' bg-(--color-navyBlue) text-white' : 'bg-white'}`}
+                        className={`px-3 py-2 border rounded cursor-pointer border-(--color-columbia-blue)   ${isSelected ? ' bg-(--color-navyBlue) text-white' : 'bg-white'} ${oos ? ' opacity-60' : ''}`}
                       >
                         {label} — ₦{Number(v.price || 0).toLocaleString()}
+                        {oos && (
+                          <span className={`block text-xs font-semibold ${isSelected ? 'text-red-200' : 'text-red-600'}`}>
+                            Out of stock
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -110,9 +132,14 @@ export default function ProductDetail({ product }: Props) {
           <div className="mt-6 flex gap-3">
             <button
               onClick={handleAddToCart}
-              className="px-4 py-2  bg-(--color-navyBlue) hover:bg-(--color-navyBlue)/90 duration-200 text-white rounded cursor-pointer"
+              disabled={!selectedVariant || selectedVariantOOS}
+              className={`px-4 py-2 duration-200 text-white rounded ${
+                !selectedVariant || selectedVariantOOS
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-(--color-navyBlue) hover:bg-(--color-navyBlue)/90 cursor-pointer'
+              }`}
             >
-              Add to cart
+              {selectedVariantOOS ? 'Out of stock' : 'Add to cart'}
             </button>
 
             {variants.length > 1 && (

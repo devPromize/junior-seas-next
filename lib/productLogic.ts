@@ -143,3 +143,7 @@ export const isProductOutOfStock = (product: any): boolean =>
   product?.inStock === false ||
   (Array.isArray(product?.variants) &&
     product.variants.every((v: any) => Number(v?.stock ?? 0) === 0));
+
+/** A single variant is out of stock when its stock is 0 or missing. */
+export const isVariantOutOfStock = (variant: any): boolean =>
+  Number(variant?.stock ?? 0) === 0;

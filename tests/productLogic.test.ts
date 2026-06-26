@@ -10,6 +10,7 @@ import {
   paginate,
   getPriceLabel,
   isProductOutOfStock,
+  isVariantOutOfStock,
 } from "@/lib/productLogic";
 
 // Small helpers to build product fixtures without a database.
@@ -239,5 +240,19 @@ describe("isProductOutOfStock", () => {
 
   it("treats an empty variants array as out of stock (matches original card behaviour)", () => {
     expect(isProductOutOfStock(product({ variants: [] }))).toBe(true);
+  });
+});
+
+describe("isVariantOutOfStock", () => {
+  it("is out of stock when stock is 0", () => {
+    expect(isVariantOutOfStock(variant({ stock: 0 }))).toBe(true);
+  });
+
+  it("is out of stock when stock is missing", () => {
+    expect(isVariantOutOfStock({ ram: "8GB" })).toBe(true);
+  });
+
+  it("is in stock when stock is positive", () => {
+    expect(isVariantOutOfStock(variant({ stock: 3 }))).toBe(false);
   });
 });
