@@ -30,12 +30,28 @@ const highlightSections: HighlightItem[] = [
 // ===== Helper Renderers for Reuse =====
 const ImageGroupOne = () => (
   <Container>
-    <div className="flex gap-4 flex-col md:flex-row bg-black/5 p-4  rounded-lg">
-      <div className="flex gap-4">
-        <HomeFeatureImgs src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png" alt="ANC Earphones" searchQuery="earphones"/>
-        <HomeFeatureImgs src="/assets/js-imgs/Home-Smart-Watches-768x768.png" alt="Smart Watches" searchQuery="smart watch" />
-      </div>
-      <HomeFeatureImgs src="/assets/js-imgs/uk-used-iphones-img.jpeg" alt="UK Used iPhones" searchQuery="iphones" />
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <HomeFeatureImgs
+        src="/assets/js-imgs/Explore-ANC-Earphones-768x768.png"
+        alt="ANC Earphones"
+        searchQuery="earphones"
+        wrapperClassName="overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-sm"
+        className="aspect-square w-full object-cover hover:scale-105"
+      />
+      <HomeFeatureImgs
+        src="/assets/js-imgs/Home-Smart-Watches-768x768.png"
+        alt="Smart Watches"
+        searchQuery="smart watch"
+        wrapperClassName="overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-sm"
+        className="aspect-square w-full object-cover hover:scale-105"
+      />
+      <HomeFeatureImgs
+        src="/assets/js-imgs/uk-used-iphones-img.jpeg"
+        alt="UK Used iPhones"
+        searchQuery="iphones"
+        wrapperClassName="col-span-2 overflow-hidden rounded-2xl ring-1 ring-black/5 shadow-sm"
+        className="h-full w-full object-cover hover:scale-105"
+      />
     </div>
   </Container>
 );
