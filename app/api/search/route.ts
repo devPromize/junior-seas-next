@@ -12,12 +12,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ products: [] }, { status: 200 });
     }
 
-    // Search strictly by name and brand
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
-      .limit(50);
+    // Full-text search via the search_products() Postgres function: English
+    // stemming so word variants match (e.g. "iphones" finds "iPhone"), with a
+    // name/brand substring fallback so everything the old search found is still
+    // found. See the search_products SQL function in Supabase.
+    const { data, error } = await supabase.rpc('search_products', { q });
 
     if (error) throw error;
 
