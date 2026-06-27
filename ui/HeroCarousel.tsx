@@ -55,20 +55,22 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
         {data.map((slide: Slide) => (
           <SwiperSlide key={slide.id}>
             <Link href={`/search?q=${encodeURIComponent(slide.title)}`}>
-              <div className="w-full h-[55vh] lg:h-[70vh] relative bg-[--color-columbia-blue]">
+              <div className="w-full h-[55vh] lg:h-[70vh] relative overflow-hidden bg-[--color-columbia-blue]">
                 <Image
                   fill
                   src={slide.image_url}
                   alt={slide.title}
-                  className="w-full h-full object-cover object-center sm:object-right "
-                   sizes="100vw"
-  priority
+                  className="w-full h-full object-cover object-center sm:object-right brightness-105 saturate-[1.15]"
+                  sizes="100vw"
+                  priority
                 />
-                <div className="absolute bottom-4 left-4 text-white bg-black/80 p-4 rounded-lg max-w-md">
-                  <h2 className="text-lg font-bold">
+                {/* gradient scrim: lifts the image and makes text readable without a hard black box */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute bottom-6 left-6 right-6 sm:right-auto max-w-xl text-white drop-shadow-lg">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight drop-shadow-md">
                     {slide.title}
                   </h2>
-                  <p className="text-sm">
+                  <p className="mt-1 text-sm sm:text-base text-white/90 drop-shadow">
                     {slide.description}
                   </p>
                 </div>

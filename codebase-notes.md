@@ -661,6 +661,39 @@ Config: `vitest.config.ts` (node environment; mirrors the `@/*` → repo-root al
 
 ---
 
+# 18. Search — two paths + a Postgres function
+
+There are **two separate search code paths** — easy to edit the wrong one:
+- **Shop / filter page** → `/api/products` → `fetchProducts` in `lib/services/productService.ts` (still a plain `name ILIKE '%term%'`).
+- **The `/search` page** (header search box, hero/feed/feature-image links all point here) → `/api/search` (`app/api/search/route.ts`). **This is the real product search.**
+
+**Why "iphone" worked but "iphones" didn't:** `ILIKE '%iphones%'` is a literal substring match — "iPhone 15" contains no `iphones` substring, so it returned nothing. Substring matching has no concept of plurals/word-endings.
+
+**The fix:** the search route now calls a Postgres function via `supabase.rpc('search_products', { q })`. The function uses **full-text search with the English stemmer** (`to_tsvector('english', …) @@ websearch_to_tsquery('english', q)`), so word variants match (`iphones` → `iPhone`) and multi-word queries match regardless of order — **OR** a name/brand `ILIKE` substring fallback so every result the old search returned is still returned (strict superset).
+
+> ⚠️ **The `search_products` function lives in Supabase, not in this repo.** Local and production share the same database, so it's already live for both. But a **fresh/duplicate Supabase project would not have it** — re-run the SQL below there. (An optional `gin` index on the same `to_tsvector(...)` expression speeds it up for large catalogs.)
+
+```sql
+create or replace function search_products(q text)
+returns setof products
+language sql
+stable
+as $$
+  select *
+  from products
+  where
+    to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,''))
+      @@ websearch_to_tsquery('english', q)
+    or name  ilike '%' || q || '%'
+    or brand ilike '%' || q || '%'
+  limit 50;
+$$;
+```
+
+If `rpc('search_products')` ever 404s after (re)creating it, reload PostgREST's cache: `notify pgrst, 'reload schema';`.
+
+---
+
 ## Mental model to keep
 
 1. **Folders = routes.** A `page.tsx` is a URL; a `route.ts` under `api/` is a backend endpoint.
