@@ -3,10 +3,25 @@ import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { sendOrderEmails } from '@/lib/SendOrderEmails';
 import { generateOrderRef, koboToNaira } from '@/lib/payments';
+import { createOrderSchema } from '@/lib/validation';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    // Validate the untrusted request body (shape, valid email, positive amount,
+    // at least one item) before touching the database.
+    const parsed = createOrderSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          message: 'Invalid order data',
+          issues: parsed.error.issues.map((i) => i.message),
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       billing,
       shipping,
@@ -14,14 +29,7 @@ export async function POST(req: Request) {
       amount,
       currency = 'NGN',
       user_id,
-    } = body;
-
-    if (!billing || !shipping || !items || !amount) {
-      return NextResponse.json(
-        { message: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const order_ref = generateOrderRef();
 

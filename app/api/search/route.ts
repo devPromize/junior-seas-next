@@ -1,12 +1,22 @@
 // src/app/api/search/route.ts
 import { createClient } from '@/lib/services/server';
 import { NextResponse } from 'next/server';
+import { searchQuerySchema } from '@/lib/validation';
 
 export async function GET(req: Request) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(req.url);
-    const q = searchParams.get('q')?.trim();
+
+    // Validate + normalize the search term (trim + length cap) before using it.
+    const parsed = searchQuerySchema.safeParse(searchParams.get('q') ?? '');
+    if (!parsed.success) {
+      return NextResponse.json(
+        { products: [], error: 'Invalid search query' },
+        { status: 400 }
+      );
+    }
+    const q = parsed.data;
 
     if (!q) {
       return NextResponse.json({ products: [] }, { status: 200 });
