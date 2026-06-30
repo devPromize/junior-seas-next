@@ -116,6 +116,9 @@ const Header = () => {
           >
             <input
               type="text"
+              id="search-products-desktop"
+              name="search"
+              autoComplete="off"
               value={searchText}
               onChange={(e) => {
                 setSearchText(e.target.value);
@@ -123,8 +126,8 @@ const Header = () => {
               }}
               onFocus={() => setShowSuggestions(true)}
               placeholder="Search Products"
-              className="w-full flex-1 rounded-sm text-gray-900 text-lg placeholder:text-base 
-            shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 
+              className="w-full flex-1 rounded-sm text-gray-900 text-lg placeholder:text-base
+            shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400
             focus:ring-0 focus:outline-(--color-skyBlue) sm:text-sm px-4 py-2"
             />
 
@@ -308,6 +311,9 @@ const Header = () => {
           <div className="p-5 mt-2 relative">
             <input
               type="text"
+              id="search-products-mobile"
+              name="search"
+              autoComplete="off"
               value={searchText}
               onChange={(e) => {
                 setSearchText(e.target.value);
@@ -330,6 +336,9 @@ const Header = () => {
                   <input
                     autoFocus
                     type="text"
+                    id="search-products-overlay"
+                    name="search"
+                    autoComplete="off"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="flex-1 px-3 py-2 border rounded text-gray-800"
