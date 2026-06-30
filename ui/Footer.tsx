@@ -146,16 +146,6 @@ const Footer = () => {
         <div className="h-0.5 bg-(--color-skyBlue)/50 w-full"></div>
         <div className="flex flex-col gap-2 items-center sm:flex-row justify-around md:flex-row pt-4">
           <p>@{new Date().getFullYear()} Junior Seas. All Rights Reserved.</p>
-          <div className="flex flex-col items-center gap-0 mb-5">
-            <p>Need a Website?</p>
-            <a
-              href="https://ip-webcrafts.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Contact Me for Web Services&#33;
-            </a>
-          </div>
 
           <div className="flex space-x-4">
             <a
