@@ -38,7 +38,7 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
       Something went wrong, Please Refresh Page
     </p>
   ) : (
-    <div className="w-full h-[500px] relative overflow-hidden">
+    <div className="w-full h-[55vh] lg:h-[70vh] relative overflow-hidden">
       <Swiper
         spaceBetween={0}
         slidesPerView={1}
@@ -88,6 +88,23 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
             .swiper-button-next {
               display: none;
             }
+          }
+          /* Overlay the pagination bullets inside the image, near the bottom */
+          .swiper-pagination {
+            bottom: 16px !important;
+            z-index: 20;
+          }
+          .swiper-pagination-bullet {
+            background: #ffffff;
+            opacity: 0.5;
+            width: 9px;
+            height: 9px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+          }
+          .swiper-pagination-bullet-active {
+            opacity: 1;
+            transform: scale(1.25);
           }
         `}</style>
       </Swiper>
