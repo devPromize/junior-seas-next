@@ -33,7 +33,7 @@ const perks = [
 const Perks = () => {
   return (
     <div
-      className="flex gap-5 items-center justify-between p-7 mt-0 
+      className="flex gap-2 md:gap-5 items-start md:items-center justify-between p-3 md:p-7 mt-0
         hover:shadow-(--card-box-shadow) hover:transform-(--card-hover-transform) transition-transform duration-400 ease-in-out
          bg-white/50 backdrop-blur-sm border border-black/10 "
     >
@@ -41,19 +41,19 @@ const Perks = () => {
         <Link
           href={perk.link}
           key={index}
-          className="flex flex-col items-center justify-center gap-2 text-center break-words text-xs md:text-sm"
+          className="flex flex-1 flex-col items-center justify-start gap-1 md:gap-2 text-center break-words"
         >
           <Image
             width={50}
             height={50}
             src={perk.icon}
             alt={perk.title}
-            className={perk.iconSize}
+            className={`${perk.iconSize} scale-75 md:scale-100`}
           />
-          <h1 className="font-bold text-black hover:text-(--color-black)/70 duration-200">
+          <h1 className="font-bold text-black text-xs md:text-base hover:text-(--color-black)/70 duration-200">
             {perk.title}
           </h1>
-          <p className="text-center text-black hover:text-(--color-black)/75 duration-200">
+          <p className="text-center text-black text-[10px] leading-snug md:text-sm hover:text-(--color-black)/75 duration-200">
             {perk.description}
           </p>
         </Link>
