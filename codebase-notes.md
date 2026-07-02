@@ -694,6 +694,28 @@ If `rpc('search_products')` ever 404s after (re)creating it, reload PostgREST's 
 
 ---
 
+# 19. SEO
+
+The goal: help search engines **find, understand, and display** the store. Four pieces work together.
+
+1. **Server rendering (baseline).** Because pages render on the server (Next.js), crawlers get real HTML — a big win over the old client-only React SPA, which search engines struggle to read. This is the foundation the rest builds on.
+
+2. **Site-wide metadata** — `app/layout.tsx` `export const metadata`: default `title`/`description`, favicons, **Open Graph** (`og-image`, title, url) and Twitter card. OG tags are what make a shared link (especially on **WhatsApp**, common in this market) show a rich preview instead of a bare URL.
+
+3. **Per-product metadata** — `app/products/[id]/page.tsx` `generateMetadata()`: each product page gets its **own** title, description, and OG image from the product data, so items rank and share individually instead of inheriting the generic site title. Wrapped in try/catch → falls back to a generic title if the product can't load.
+
+4. **Sitemap + robots** (Next.js file conventions, served at `/sitemap.xml` and `/robots.txt`):
+   - `app/sitemap.ts` — lists static public routes **+ every product** (ids pulled from Supabase via `supabaseServer`). Private/transactional routes (cart, checkout, account, wishlist, search) are deliberately excluded. Degrades gracefully (static routes only) if products can't be fetched.
+   - `app/robots.ts` — allows crawling, points to the sitemap, and disallows `/api/`, `/account/`, `/cart`, `/checkout`, `/wishlist`, `/payment/`.
+
+> The canonical domain `https://juniorseastech.com` is **hardcoded** in `sitemap.ts`, `robots.ts`, and the product `generateMetadata` — intentionally, so it never accidentally emits a `localhost` URL from an env var.
+>
+> ⚠️ **Deploying does not tell Google about the sitemap.** After deploy, submit `sitemap.xml` in **Google Search Console** (Sitemaps → enter `sitemap.xml`) — that's what actually triggers crawling.
+
+**Known SEO gaps / next steps:** no JSON-LD structured data yet (Product schema would enable rich results — price, availability, ratings in Google). Static pages share the site-wide description (fine, but per-page descriptions would be better).
+
+---
+
 ## Mental model to keep
 
 1. **Folders = routes.** A `page.tsx` is a URL; a `route.ts` under `api/` is a backend endpoint.
