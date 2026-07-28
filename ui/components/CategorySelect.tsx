@@ -42,7 +42,7 @@ export default function CategorySelect({ value, onChange }: CategorySelectProps)
 
       {categories?.map((cat) => (
         <option key={String(cat.id)} value={cat.slug}>
-          {cat.name}
+          {cat.title}
         </option>
       ))}
     </select>
