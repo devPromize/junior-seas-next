@@ -1,5 +1,5 @@
 // lib/sendDeliveryEmail.ts
-import { createClient } from '@/lib/services/client';
+import { supabaseServer } from '@/lib/supabaseServer';
 import { sendEmail } from '@/lib/sendEmail';
 
 type DeliveryEmailPayload = {
@@ -17,7 +17,7 @@ export async function sendDeliveryEmail({
   items,
   total_amount,
 }: DeliveryEmailPayload) {
-  const supabase = createClient();
+  const supabase = supabaseServer;
 
   // 🔐 Idempotency check
   const { data: alreadySent } = await supabase
