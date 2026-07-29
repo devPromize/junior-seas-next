@@ -1,25 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 export async function GET() {
-  const {
-    data: { user },
-  } = await supabaseServer.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  // check admin
-  const { data: profile } = await supabaseServer
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
-    return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
-  }
+  const { error: authError } = await requireAdmin();
+  if (authError) return authError;
 
   const { data, error } = await supabaseServer
     .from('orders')
