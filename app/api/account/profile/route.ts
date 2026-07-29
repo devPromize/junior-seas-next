@@ -1,15 +1,11 @@
-
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { requireUser } from '@/lib/requireUser';
 
 export async function GET() {
-  const { data: { user } } = await supabaseServer.auth.getUser();
+  const { user, supabase } = await requireUser();
+  if (!user) return NextResponse.json({ profile: null }, { status: 401 });
 
-  if (!user) {
-    return NextResponse.json({ profile: null }, { status: 401 });
-  }
-
-  const { data, error } = await supabaseServer
+  const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
@@ -17,21 +13,18 @@ export async function GET() {
 
   return NextResponse.json({
     profile: data ?? { email: user.email, full_name: '—', phone: '—' },
-    error: error?.message
+    error: error?.message,
   });
 }
 
 export async function PATCH(req: Request) {
-  const { data: { user } } = await supabaseServer.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const { user, supabase } = await requireUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
   const { full_name, phone } = body;
 
-  const { data, error } = await supabaseServer
+  const { data, error } = await supabase
     .from('profiles')
     .update({ full_name, phone })
     .eq('id', user.id)
