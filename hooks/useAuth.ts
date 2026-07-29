@@ -1,25 +1,24 @@
 // hooks/useAuth.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@/lib/services/client';
 
 export function useAuth() {
+  // Cookie-based SSR browser client, so the client sees the same session the
+  // server does (set by login, refreshed by middleware).
+  const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    const init = async () => {
-      const { data } = await supabase.auth.getUser();
+    supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return;
-
       setUser(data?.user ?? null);
-      setLoading(false); // ✅ auth resolved
-    };
-
-    init();
+      setLoading(false);
+    });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -32,7 +31,7 @@ export function useAuth() {
       mounted = false;
       listener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   return { user, loading };
 }

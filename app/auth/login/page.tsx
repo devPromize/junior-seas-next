@@ -1,87 +1,134 @@
-// // app/auth/login/page.tsx
-// 'use client';
-// import { useState } from 'react';
-// import { supabase } from '@/lib/supabaseClient';
-// import { useRouter } from 'next/navigation';
-
-// export default function LoginPage() {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-//   const router = useRouter();
-
-//   const handleLogin = async () => {
-//     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-//     if (error) return alert(error.message);
-//     // you may want to redirect to account page
-//     router.push('/account');
-//   };
-
-//   const sendMagicLink = async () => {
-//     const { error } = await supabase.auth.signInWithOtp({ email });
-//     if (error) return alert(error.message);
-//     alert('Magic link/sent if the email exists.');
-//   };
-
-//   return (
-//     <div className="max-w-md mx-auto p-5">
-//       <h2 className="text-2xl font-bold mb-4">Sign in</h2>
-
-//       <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" className="border p-3 w-full mb-3 rounded bg-gray-100" />
-//       <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password" className="border p-3 w-full mb-3 rounded bg-gray-100" />
-
-//       <button onClick={handleLogin} className="bg-(--color-navyBlue) text-white w-full py-3 rounded mb-2">Sign in</button>
-//       <button onClick={sendMagicLink} className="w-full border py-2 rounded">Send magic link</button>
-//     </div>
-//   );
-// }
-
-
-
 // app/auth/login/page.tsx
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@/lib/services/client';
 import Container from '@/ui/Container';
-import Confetti from 'react-confetti';
-import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setLoading(false);
+      setError(signInError.message);
+      return;
+    }
+
+    // Admins land on the dashboard; everyone else on their account.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    let destination = '/account';
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+      if (profile?.is_admin) destination = '/account/admin';
+    }
+
+    router.push(destination);
+    router.refresh(); // sync server components with the new session
+  }
 
   return (
     <Container>
-      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 relative">
-        {/* Confetti */}
-        <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
-          numberOfPieces={80}
-          gravity={0.2}
-          recycle={true}
-        />
-
-        <div className="bg-white shadow-xl rounded-3xl p-10 max-w-md w-full animate-fadeIn z-10 relative">
-          <h1 className="text-4xl font-extrabold mb-4 text-navyBlue">
-            Login Coming Soon!
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Account login functionality is under development. For now, you can continue browsing and placing orders as a guest.
+      <div className="flex items-center justify-center py-16 px-4">
+        <form
+          onSubmit={handleLogin}
+          className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md"
+        >
+          <h1 className="text-2xl font-bold mb-1">Sign in</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            Welcome back to Junior Seas Technologies.
           </p>
-          <button
-            onClick={() => router.push('/shop')}
-            className="bg-navyBlue text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+
+          {error && (
+            <p className="mb-4 rounded bg-red-50 border border-red-200 text-red-700 px-3 py-2 text-sm">
+              {error}
+            </p>
+          )}
+
+          <label htmlFor="login-email" className="block text-sm font-medium mb-1">
+            Email
+          </label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 mb-4 bg-gray-50 focus:outline-none focus:border-black"
+          />
+
+          <label
+            htmlFor="login-password"
+            className="block text-sm font-medium mb-1"
           >
-            Continue Shopping
+            Password
+          </label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 mb-2 bg-gray-50 focus:outline-none focus:border-black"
+          />
+
+          <div className="text-right mb-5">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-(--color-navyBlue) underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-(--color-navyBlue) text-white py-3 rounded-lg font-semibold disabled:opacity-60"
+          >
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
-        </div>
+
+          <p className="text-sm text-center text-gray-500 mt-5">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/signup" className="text-(--color-navyBlue) underline">
+              Create one
+            </Link>
+          </p>
+          <p className="text-xs text-center text-gray-400 mt-3">
+            Prefer not to sign in? You can still{' '}
+            <Link href="/shop" className="underline">
+              shop as a guest
+            </Link>
+            .
+          </p>
+        </form>
       </div>
     </Container>
   );
