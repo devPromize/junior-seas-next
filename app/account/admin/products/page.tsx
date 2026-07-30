@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import Container from '@/ui/Container';
 
 type Variant = {
@@ -160,28 +161,46 @@ export default function AdminProductsPage() {
     setTimeout(() => setSavedId((id) => (id === p.id ? null : id)), 2000);
   };
 
+  const deleteProduct = async (p: Product) => {
+    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/products/${p.id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      setError('Failed to delete product.');
+      return;
+    }
+    setProducts((prev) => prev.filter((x) => x.id !== p.id));
+  };
+
   return (
     <Container>
       <section className="py-8 max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
           <h1 className="text-2xl font-bold">Products &amp; Stock</h1>
 
-          {locations.length > 0 && (
-            <label className="text-sm flex items-center gap-2">
-              <span className="text-gray-600">Location</span>
-              <select
-                value={locationId}
-                onChange={(e) => setLocationId(e.target.value)}
-                className="border rounded px-3 py-1.5"
-              >
-                {locations.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {locations.length > 0 && (
+              <label className="text-sm flex items-center gap-2">
+                <span className="text-gray-600">Location</span>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  className="border rounded px-3 py-1.5"
+                >
+                  {locations.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <Link
+              href="/account/admin/products/new"
+              className="bg-(--color-navyBlue) text-white text-sm px-4 py-2 rounded"
+            >
+              + New product
+            </Link>
+          </div>
         </div>
 
         {error && (
@@ -269,7 +288,7 @@ export default function AdminProductsPage() {
                           </tbody>
                         </table>
 
-                        <div className="flex items-center gap-3 mt-3">
+                        <div className="flex flex-wrap items-center gap-3 mt-3">
                           <button
                             onClick={() => saveProduct(p)}
                             disabled={!productHasEdits(p) || saving === p.id}
@@ -280,6 +299,19 @@ export default function AdminProductsPage() {
                           {savedId === p.id && (
                             <span className="text-green-700 text-sm">Saved ✓</span>
                           )}
+                          <span className="flex-1" />
+                          <Link
+                            href={`/account/admin/products/${p.id}/edit`}
+                            className="text-sm border px-4 py-1.5 rounded hover:bg-gray-50"
+                          >
+                            Edit details
+                          </Link>
+                          <button
+                            onClick={() => deleteProduct(p)}
+                            className="text-sm text-red-600 border border-red-200 px-4 py-1.5 rounded hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
                     )}

@@ -31,21 +31,9 @@ export default function LoginPage() {
       return;
     }
 
-    // Admins land on the dashboard; everyone else on their account.
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    let destination = '/account';
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single();
-      if (profile?.is_admin) destination = '/account/admin';
-    }
-
-    router.push(destination);
+    // Everyone lands on the account hub, so the post-login view matches what the
+    // account icon shows. Admins see an "Admin" card there into the dashboard.
+    router.push('/account');
     router.refresh(); // sync server components with the new session
   }
 

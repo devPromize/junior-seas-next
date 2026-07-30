@@ -25,12 +25,26 @@ export async function PATCH(
 
   const updates: any = { ...parsed.data };
   if (updates.name) updates.slug = slugify(updates.name, { lower: true });
-  // Keep every variant's stable sku (generate for any newly-added variant).
+
   if (Array.isArray(updates.variants)) {
-    updates.variants = updates.variants.map((v: any) => ({
-      ...v,
-      sku: v.sku || randomUUID(),
-    }));
+    // Preserve each variant's current stock (managed by the per-location stock
+    // editor / location_stock) so the edit form never clobbers it. New variants
+    // default to 0 until stock is set on the Products & Stock page.
+    const { data: existing } = await supabaseServer
+      .from('products')
+      .select('variants')
+      .eq('id', id)
+      .single();
+    const prevBySku = new Map<string, any>(
+      (Array.isArray(existing?.variants) ? existing!.variants : []).map(
+        (v: any) => [v.sku, v]
+      )
+    );
+    updates.variants = updates.variants.map((v: any) => {
+      const sku = v.sku || randomUUID();
+      const prev = prevBySku.get(sku);
+      return { ...v, sku, stock: prev?.stock ?? v.stock ?? 0 };
+    });
   }
 
   const { data, error } = await supabaseServer
