@@ -4,6 +4,7 @@ import {
   addItemToCart,
   calculateTotal,
   setItemQuantity,
+  mergeCarts,
 } from "@/lib/cartLogic";
 
 describe("buildCartItem (defaults)", () => {
@@ -99,5 +100,28 @@ describe("setItemQuantity", () => {
   it("does not mutate the original array", () => {
     setItemQuantity(base, "a", 9);
     expect(base.find((i) => i._id === "a")?.quantity).toBe(1);
+  });
+});
+
+describe("mergeCarts (combine guest + saved cart)", () => {
+  it("unions two disjoint carts", () => {
+    const a = [buildCartItem({ _id: "a", quantity: 1 })];
+    const b = [buildCartItem({ _id: "b", quantity: 2 })];
+    const merged = mergeCarts(a, b);
+    expect(merged.map((i) => i._id).sort()).toEqual(["a", "b"]);
+  });
+
+  it("dedupes a shared item and keeps the higher quantity", () => {
+    const a = [buildCartItem({ _id: "a", quantity: 1 })];
+    const b = [buildCartItem({ _id: "a", quantity: 4 })];
+    const merged = mergeCarts(a, b);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].quantity).toBe(4);
+  });
+
+  it("returns the non-empty cart when the other is empty", () => {
+    const b = [buildCartItem({ _id: "a", quantity: 3 })];
+    expect(mergeCarts([], b)).toHaveLength(1);
+    expect(mergeCarts(b, [])).toHaveLength(1);
   });
 });

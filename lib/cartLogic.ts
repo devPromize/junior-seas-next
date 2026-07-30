@@ -64,3 +64,23 @@ export const setItemQuantity = (
   items
     .map((item) => (item._id === id ? { ...item, quantity } : item))
     .filter((item) => item.quantity > 0);
+
+/**
+ * Combine two carts (e.g. a guest/localStorage cart and a saved server cart),
+ * deduped by _id. When the same item is in both, the higher quantity wins so
+ * nothing a shopper added is ever lost.
+ */
+export const mergeCarts = (a: CartItem[], b: CartItem[]): CartItem[] => {
+  const byId = new Map<string, CartItem>();
+  for (const item of [...a, ...b]) {
+    const id = String(item._id);
+    const existing = byId.get(id);
+    byId.set(
+      id,
+      existing
+        ? { ...existing, quantity: Math.max(existing.quantity, item.quantity) }
+        : item
+    );
+  }
+  return Array.from(byId.values());
+};

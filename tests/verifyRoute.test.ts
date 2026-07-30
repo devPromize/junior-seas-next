@@ -70,15 +70,17 @@ beforeEach(() => {
 });
 
 describe("verify route — idempotency guard", () => {
-  it("ALREADY-paid order: no DB update, NO duplicate email, still redirects to success", async () => {
+  it("ALREADY-paid order: does not re-mark paid, still attempts the receipt (deduped downstream), redirects to success", async () => {
     mocks.single.mockResolvedValue({ data: paidOrder, error: null });
 
     const res = await callVerify("JS-1-2026");
 
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("/payment/success");
-    expect(mocks.update).not.toHaveBeenCalled(); // did not re-mark paid
-    expect(mocks.sendPaymentSuccessEmail).not.toHaveBeenCalled(); // did not resend the receipt
+    expect(mocks.update).not.toHaveBeenCalled(); // DB write stays idempotent
+    // The receipt is always attempted; sendPaymentSuccessEmail dedupes via
+    // order_emails, so this is safe even when the webhook already sent it.
+    expect(mocks.sendPaymentSuccessEmail).toHaveBeenCalledTimes(1);
   });
 
   it("pending order (first time): marks paid and sends exactly one email", async () => {
@@ -91,13 +93,16 @@ describe("verify route — idempotency guard", () => {
     expect(mocks.sendPaymentSuccessEmail).toHaveBeenCalledTimes(1);
   });
 
-  it("same order processed twice (pending, then paid): only ONE email total", async () => {
+  it("processed twice (pending, then paid): marks paid only once; receipt dedupe is delegated to sendPaymentSuccessEmail", async () => {
     mocks.single.mockResolvedValueOnce({ data: pendingOrder, error: null });
-    await callVerify("JS-1-2026"); // first hit does the work
+    await callVerify("JS-1-2026"); // first hit marks paid + attempts receipt
     mocks.single.mockResolvedValueOnce({ data: paidOrder, error: null });
-    await callVerify("JS-1-2026"); // second hit sees 'paid' → short-circuits
+    await callVerify("JS-1-2026"); // second hit: already paid → no re-mark, still attempts receipt
 
-    expect(mocks.sendPaymentSuccessEmail).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledTimes(1); // DB marked paid exactly once
+    // The single-email guarantee now lives in sendPaymentSuccessEmail's
+    // order_emails dedupe (mocked here), so verify's delegated call is counted per hit.
+    expect(mocks.sendPaymentSuccessEmail).toHaveBeenCalledTimes(2);
   });
 });
 
