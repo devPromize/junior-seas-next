@@ -1,7 +1,8 @@
 // app/api/paystack/webhook/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
-import { verifyPaystackSignature } from '@/lib/payments';
+import { verifyPaystackSignature, koboToNaira } from '@/lib/payments';
+import { sendPaymentSuccessEmail } from '@/lib/sendPaymentSuccessEmail';
 
 export async function POST(req: Request) {
   try {
@@ -19,28 +20,38 @@ export async function POST(req: Request) {
       const data = event.data;
       const reference = data.reference;
       const metadata = data.metadata || {};
-      // Update order in DB by order_ref (reference)
+      // Mark the order paid.
       await supabaseServer.from('orders').update({
         payment_status: 'paid',
-        paystack_ref: reference
+        paystack_ref: reference,
+        payment_method: 'paystack',
+        paid_at: new Date().toISOString(),
       }).eq('order_ref', reference);
 
-      // Optionally clear server-side cart if order.user_id exists
-      const { data: orderRows } = await supabaseServer.from('orders').select('user_id').eq('order_ref', reference).limit(1);
+      // Fetch the full order for the receipt email + cart clear.
+      const { data: orderRows } = await supabaseServer
+        .from('orders').select('*').eq('order_ref', reference).limit(1);
       const order = orderRows?.[0];
+
       if (order?.user_id) {
         await supabaseServer.from('carts').delete().eq('user_id', order.user_id);
       }
 
-      // Optionally send email via your send-order-email route
-      try {
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_ref: reference }),
-        });
-      } catch (err) {
-        console.error('send email error', err);
+      // Send the payment receipt directly (the previous /api/send-order-email
+      // route never existed). Idempotent, so verify can also send it safely.
+      if (order) {
+        try {
+          await sendPaymentSuccessEmail({
+            order_ref: order.order_ref,
+            customer_email: order.billing?.email,
+            customer_name:
+              order.billing?.full_name || order.billing?.name || 'Customer',
+            items: order.items,
+            total_amount: koboToNaira(order.amount),
+          });
+        } catch (err) {
+          console.error('Payment success email failed:', err);
+        }
       }
     }
 

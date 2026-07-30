@@ -44,44 +44,41 @@ export async function GET(req: Request) {
     );
   }
 
-  // 3️⃣ Idempotency guard
-  if (order.payment_status === 'paid') {
-    return NextResponse.redirect(
-      `${SITE_URL}/payment/success?ref=${reference}`
-    );
-  }
-
-  // 4️⃣ Update order
-  await supabaseServer
-    .from('orders')
-    .update({
-      payment_status: 'paid',
-      paystack_ref: reference,
-      payment_method: 'paystack',
-      paid_at: new Date().toISOString(),
-    })
-    .eq('order_ref', reference);
-
-  // 5️⃣ Clear server cart (if user exists)
-  if (order.user_id) {
+  // 3️⃣ Mark paid + clear cart, but only if not already done. The webhook may
+  //    have gotten here first — that's fine; we still send the receipt below.
+  if (order.payment_status !== 'paid') {
     await supabaseServer
-      .from('carts')
-      .delete()
-      .eq('user_id', order.user_id);
+      .from('orders')
+      .update({
+        payment_status: 'paid',
+        paystack_ref: reference,
+        payment_method: 'paystack',
+        paid_at: new Date().toISOString(),
+      })
+      .eq('order_ref', reference);
 
-      console.log('Cart cleared for user:', order.user_id);
+    if (order.user_id) {
+      await supabaseServer.from('carts').delete().eq('user_id', order.user_id);
+    }
   }
 
-await sendPaymentSuccessEmail({
-  order_ref: order.order_ref,
-  customer_email: order.billing.email,
-  customer_name: order.billing.full_name,
-  items: order.items,
-  total_amount: koboToNaira(order.amount),
-});
+  // 4️⃣ Send the payment receipt. sendPaymentSuccessEmail dedupes on
+  //    order_emails(type='payment_success'), so this is safe even if the webhook
+  //    already sent it — and it now runs even when the order was already paid.
+  try {
+    await sendPaymentSuccessEmail({
+      order_ref: order.order_ref,
+      customer_email: order.billing?.email,
+      customer_name:
+        order.billing?.full_name || order.billing?.name || 'Customer',
+      items: order.items,
+      total_amount: koboToNaira(order.amount),
+    });
+  } catch (emailErr) {
+    console.error('Payment success email failed:', emailErr);
+  }
 
-
-  // 6️⃣ Redirect to success page
+  // 5️⃣ Redirect to success page
   return NextResponse.redirect(
     `${SITE_URL}/payment/success?ref=${reference}`
   );
