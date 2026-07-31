@@ -169,7 +169,11 @@ const Header = () => {
             <Link
               href="/account"
               className={
-                url === "/account" ? "active-link" : "text-(--color-navyBlue)"
+                // Active for /account and any sub-page (e.g. /account/admin),
+                // not just an exact "/account" match.
+                url === "/account" || url.startsWith("/account/")
+                  ? "active-link"
+                  : "text-(--color-navyBlue)"
               }
             >
               <div className="relative group">
