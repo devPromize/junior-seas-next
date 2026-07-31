@@ -14,6 +14,9 @@ export async function GET() {
       amount,
       currency,
       payment_status,
+      payment_method,
+      payment_note,
+      paid_at,
       shipping_status,
       created_at,
       billing

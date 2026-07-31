@@ -92,6 +92,24 @@ export const adminProductUpdateSchema = z
   })
   .passthrough();
 
+/** Allowed manual payment methods for admin "mark as paid". */
+export const PAYMENT_METHODS = [
+  'bank_transfer',
+  'cash',
+  'pos_card',
+  'wallet',
+  'whatsapp',
+  'other',
+] as const;
+
+/** Admin "mark as paid" (POST /api/admin/orders/mark-paid). */
+export const markPaidSchema = z.object({
+  order_ref: z.string().min(1, 'Order reference required'),
+  method: z.enum(PAYMENT_METHODS),
+  note: z.string().max(500).optional().nullable(),
+  send_receipt: z.boolean().optional().default(true),
+});
+
 /** Per-location stock update (PATCH /api/admin/stock). */
 export const stockUpdateSchema = z.object({
   location_id: z.string().uuid("A valid location is required"),
