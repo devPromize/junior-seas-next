@@ -75,7 +75,16 @@ export const fetchProducts = async (params: ProductQueryParams = {}) => {
 
   let query = supabase.from("products").select("*");
 
-  if (category) query = query.ilike("category", `%${category}%`);
+  // Filter by the enforced category_id FK (resolve the slug the shop passes),
+  // not the free-text category, so filtering can't drift. Unknown slug → no rows.
+  if (category) {
+    const { data: cat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", category)
+      .maybeSingle();
+    query = query.eq("category_id", cat?.id ?? -1);
+  }
   if (search) query = query.ilike("name", `%${search}%`);
 
   // ✅ Only let Supabase sort REAL DB columns
