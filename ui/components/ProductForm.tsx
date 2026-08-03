@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CategorySelect from '@/ui/components/CategorySelect';
+import ImageUploader from '@/ui/components/ImageUploader';
 
 type VariantForm = {
   sku?: string;
@@ -72,6 +73,13 @@ export default function ProductForm({
   const addImage = () => setImages((prev) => [...prev, '']);
   const removeImage = (i: number) =>
     setImages((prev) => prev.filter((_, idx) => idx !== i));
+  // Put an uploaded URL into the first empty slot, else append a new one.
+  const addImageUrl = (url: string) =>
+    setImages((prev) => {
+      const idx = prev.findIndex((im) => !im.trim());
+      if (idx >= 0) return prev.map((im, i) => (i === idx ? url : im));
+      return [...prev, url];
+    });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -202,21 +210,32 @@ export default function ProductForm({
       {/* Images */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="text-sm font-medium">Image URLs</label>
-          <button
-            type="button"
-            onClick={addImage}
-            className="text-sm text-(--color-navyBlue) underline"
-          >
-            + Add image
-          </button>
+          <label className="text-sm font-medium">Images</label>
+          <div className="flex items-center gap-3">
+            <ImageUploader onUploaded={addImageUrl} label="Upload image" />
+            <button
+              type="button"
+              onClick={addImage}
+              className="text-sm text-(--color-navyBlue) underline"
+            >
+              + Add URL
+            </button>
+          </div>
         </div>
         <p className="text-xs text-gray-400 mb-2">
-          Paste ImageKit image URLs (ik.imagekit.io).
+          Upload an image, or paste an ImageKit URL (ik.imagekit.io).
         </p>
         <div className="space-y-2">
           {images.map((im, i) => (
-            <div key={i} className="flex gap-2">
+            <div key={i} className="flex gap-2 items-center">
+              {im.trim() && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={im}
+                  alt=""
+                  className="w-10 h-10 object-cover rounded border shrink-0"
+                />
+              )}
               <input
                 value={im}
                 onChange={(e) => setImage(i, e.target.value)}
@@ -295,12 +314,19 @@ export default function ProductForm({
                     className={inputCls}
                   />
                 )}
-                <input
-                  value={v.image ?? ''}
-                  onChange={(e) => setVariant(i, { image: e.target.value })}
-                  placeholder="Variant image URL"
-                  className={inputCls}
-                />
+                <div className="flex gap-1 items-center col-span-2 sm:col-span-1">
+                  <input
+                    value={v.image ?? ''}
+                    onChange={(e) => setVariant(i, { image: e.target.value })}
+                    placeholder="Variant image URL"
+                    className={inputCls}
+                  />
+                  <ImageUploader
+                    compact
+                    label="Upload"
+                    onUploaded={(url) => setVariant(i, { image: url })}
+                  />
+                </div>
               </div>
               {variants.length > 1 && (
                 <button
