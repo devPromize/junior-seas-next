@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { isActivePath } from '@/lib/isActivePath';
 
 const HeaderCartIcon = () => {
   const url = usePathname();
@@ -24,7 +25,7 @@ const HeaderCartIcon = () => {
     <Link
       href="/cart"
       className={
-        url === '/cart'
+        isActivePath(url, '/cart')
           ? 'active-link'
           : 'text-[var(--color-navyBlue)]'
       }

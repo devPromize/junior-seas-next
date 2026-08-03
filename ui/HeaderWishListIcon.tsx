@@ -5,6 +5,7 @@ import { useWishlist } from '../context/WishListContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { isActivePath } from '@/lib/isActivePath';
 
 const HeaderWishlistIcon = () => {
   const { wishlistItems } = useWishlist();
@@ -21,7 +22,7 @@ const HeaderWishlistIcon = () => {
     <Link
       href="/wishlist"
       className={
-        url === '/wishlist'
+        isActivePath(url, '/wishlist')
           ? 'active-link'
           : 'text-[var(--color-navyBlue)]'
       }

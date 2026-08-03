@@ -19,6 +19,7 @@ import { usePathname } from "next/navigation";
 import { useSearchProducts } from "../hooks/useSearchProducts";
 import SearchSuggestions from "../ui/SearchSuggestions";
 import Portal from "../ui/Portal";
+import { isActivePath } from "@/lib/isActivePath";
 
 const headerNavLinks = [
   { title: "Home", to: "/" },
@@ -171,7 +172,7 @@ const Header = () => {
               className={
                 // Active for /account and any sub-page (e.g. /account/admin),
                 // not just an exact "/account" match.
-                url === "/account" || url.startsWith("/account/")
+                isActivePath(url, "/account")
                   ? "active-link"
                   : "text-(--color-navyBlue)"
               }
@@ -269,7 +270,7 @@ const Header = () => {
                   key={title}
                   href={to}
                   className={
-                    url === to
+                    isActivePath(url, to)
                       ? "active-link"
                       : "text-[var(--color-white)]/90 hover:text-[var(--color-skyBlue)] duration-200"
                   }
@@ -425,7 +426,7 @@ const Header = () => {
               key={title}
               href={to}
               className={
-                url === to
+                isActivePath(url, to)
                   ? "w-full uppercase text-[12px] font-semibold bg-[var(--color-skyBlue)] text-[var(--color-white)] duration-300 cursor-pointer"
                   : "w-full uppercase text-[12px] font-semibold hover:bg-[var(--color-skyBlue)] duration-300 cursor-pointer"
               }
