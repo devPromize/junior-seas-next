@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { adminProductCreateSchema } from '@/lib/validation';
+import { resolveCategoryId } from '@/lib/resolveCategory';
 
 // GET /api/admin/products?location=<uuid>
 // All products, each variant annotated with its stock for the given location.
@@ -73,9 +74,13 @@ export async function POST(req: Request) {
 
   const slug = fields.name ? slugify(fields.name, { lower: true }) : undefined;
 
+  // Resolve the chosen category slug to its enforced FK id. `category` (text)
+  // is kept in sync for the storefront reads that still use it.
+  const category_id = await resolveCategoryId(fields.category);
+
   const { data: product, error } = await supabaseServer
     .from('products')
-    .insert({ ...fields, variants: variantsWithSku, slug })
+    .insert({ ...fields, category_id, variants: variantsWithSku, slug })
     .select()
     .single();
 

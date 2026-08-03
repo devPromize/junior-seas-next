@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { requireAdmin } from '@/lib/requireAdmin';
 import { adminProductUpdateSchema } from '@/lib/validation';
+import { resolveCategoryId } from '@/lib/resolveCategory';
 
 // PATCH /api/admin/products/[id] — update product fields/variants.
 export async function PATCH(
@@ -25,6 +26,11 @@ export async function PATCH(
 
   const updates: any = { ...parsed.data };
   if (updates.name) updates.slug = slugify(updates.name, { lower: true });
+
+  // Keep the enforced category_id in sync whenever the category slug changes.
+  if ('category' in updates) {
+    updates.category_id = await resolveCategoryId(updates.category);
+  }
 
   if (Array.isArray(updates.variants)) {
     // Preserve each variant's current stock (managed by the per-location stock

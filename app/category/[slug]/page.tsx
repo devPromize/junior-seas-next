@@ -16,11 +16,12 @@ export default async function CategoryPage({ params }: { params: { slug: string 
     return <p className="p-6 text-red-500">Category not found.</p>;
   }
 
-  // Fetch products using the category slug
+  // Fetch products via the enforced category_id FK (not the free-text slug),
+  // so a product can never fall out of its category due to a text mismatch.
   const { data: products, error: productsError } = await supabase
     .from("products")
     .select("*")
-    .eq("category", slug);
+    .eq("category_id", category.id);
 
   if (productsError) {
     return <p className="p-6 text-red-500">Error loading products.</p>;
