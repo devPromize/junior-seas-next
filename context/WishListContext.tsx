@@ -1,7 +1,16 @@
 'use client';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'react-toastify';
 import { Variant } from '@/type';
+import { createClient } from '@/lib/services/client';
+import { mergeWishlists } from '@/lib/wishlistLogic';
 
 export interface WishlistItem {
   _id: string;
@@ -29,65 +38,104 @@ interface WishlistContextType {
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const STORAGE_KEY = 'wishlist';
 
 export const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
+  const supabase = useMemo(() => createClient(), []);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-  const syncTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Load
+  const hydratedRef = useRef(false);
+  const serverSyncedRef = useRef(false);
+
+  const saveToServer = (uid: string, items: WishlistItem[]) => {
+    supabase
+      .from('wishlists')
+      .upsert(
+        { user_id: uid, items, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+      .then(({ error }: { error: { message: string } | null }) => {
+        if (error) console.error('Wishlist sync failed:', error.message);
+      });
+  };
+
+  // 1) Load the local (guest) wishlist once.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("wishlist");
-    if (stored) setWishlistItems(JSON.parse(stored));
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        setWishlistItems(JSON.parse(stored));
+      } catch {
+        /* ignore a corrupt wishlist */
+      }
+    }
+    hydratedRef.current = true;
   }, []);
 
-  // Save local
+  // 2) Track the logged-in user (cookie session).
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
-  }, [wishlistItems]);
+    supabase.auth
+      .getUser()
+      .then(({ data }) => setUserId(data?.user?.id ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => setUserId(session?.user?.id ?? null)
+    );
+    return () => listener?.subscription?.unsubscribe();
+  }, [supabase]);
 
-  // ======= Server sync =======
-  // useEffect(() => {
-  //   if (syncTimeout.current) clearTimeout(syncTimeout.current);
-  //   syncTimeout.current = setTimeout(() => syncWishlistToServer(wishlistItems), 600);
-  // }, [wishlistItems]);
+  // 3) On login: pull the saved wishlist, merge with the local one, push back.
+  useEffect(() => {
+    if (!userId) {
+      serverSyncedRef.current = false;
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('wishlists')
+        .select('items')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (cancelled) return;
+      const serverItems: WishlistItem[] = Array.isArray(data?.items)
+        ? (data!.items as WishlistItem[])
+        : [];
+      setWishlistItems((local) => {
+        const merged = mergeWishlists(local, serverItems);
+        saveToServer(userId, merged);
+        return merged;
+      });
+      serverSyncedRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
-  // const syncWishlistToServer = async (items: WishlistItem[]) => {
-  //   try {
-  //     await fetch('/api/wishlist/sync', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ items }),
-  //     });
-  //   } catch (err) {
-  //     console.error('Wishlist sync failed', err);
-  //   }
-  // };
-
-
-  // ===== Merge ======
-  // useEffect(() => {
-  //   const mergeWishlist = async () => {
-  //     try {
-  //       const res = await fetch('/api/wishlist/merge');
-  //       const data = await res.json();
-  //       if (data?.mergedWishlist) {
-  //         setWishlistItems(data.mergedWishlist);
-  //         localStorage.setItem('wishlist', JSON.stringify(data.mergedWishlist));
-  //       }
-  //     } catch {}
-  //   };
-  //   mergeWishlist();
-  // }, []);
+  // 4) Persist changes: always to localStorage; to the server once synced.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(wishlistItems));
+    if (userId && serverSyncedRef.current) {
+      saveToServer(userId, wishlistItems);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wishlistItems, userId]);
 
   const addToWishlist = (item: WishlistItem) => {
     let added = false;
 
-    setWishlistItems(prev => {
-      const exists = prev.some(i => i._id === item._id);
+    setWishlistItems((prev) => {
+      const exists = prev.some((i) => i._id === item._id);
       if (exists) return prev;
       added = true;
-      return [...prev, { ...item, variants: item.variants || item.meta?.variants || [] }];
+      return [
+        ...prev,
+        { ...item, variants: item.variants || item.meta?.variants || [] },
+      ];
     });
 
     if (added) toast.success('Added to wishlist');
@@ -97,7 +145,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   const removeFromWishlist = (_id: string) => {
-    setWishlistItems(prev => prev.filter(item => item._id !== _id));
+    setWishlistItems((prev) => prev.filter((item) => item._id !== _id));
     toast.warn('Removed from wishlist');
   };
 
@@ -107,7 +155,9 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   return (
-    <WishlistContext.Provider value={{ wishlistItems, addToWishlist, removeFromWishlist, clearWishlist }}>
+    <WishlistContext.Provider
+      value={{ wishlistItems, addToWishlist, removeFromWishlist, clearWishlist }}
+    >
       {children}
     </WishlistContext.Provider>
   );
@@ -115,6 +165,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
-  if (!context) throw new Error('useWishlist must be used within WishlistProvider');
+  if (!context)
+    throw new Error('useWishlist must be used within WishlistProvider');
   return context;
 };
