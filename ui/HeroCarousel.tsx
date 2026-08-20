@@ -1,43 +1,25 @@
 'use client';
 import { Swiper, SwiperSlide } from 'swiper/react';
-// import 'swiper/css';
-// import 'swiper/css/pagination';
-// import 'swiper/css/navigation';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import {
   Autoplay,
   Pagination,
   Navigation,
 } from 'swiper/modules';
-import { useHeroCarousel } from '../hooks/useHeroCarousel';
-import HeroCarouselSkeleton from './components/HeroCrouselSkeleton';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import type { HeroSlide } from '@/lib/services/heroCarousel';
 
-interface Slide {
-  id: number;
-  image_url: string;
-  title: string;
-  description: string;
-}
+const HeroCarousel = ({
+  slides,
+}: {
+  slides: HeroSlide[];
+}) => {
+  if (!slides.length) return null;
 
-const HeroCarousel = () => {
-  const { data = [], isLoading, error } = useHeroCarousel();
-
-const router = useRouter();
-
-
-const handleSlideClick = (title: string) => {
-router.push(`/search?q=${encodeURIComponent(title)}`);
-};
-
-  return isLoading ? (
-    <HeroCarouselSkeleton />
-  ) : error ? (
-    <p className="text-red-500">
-      Something went wrong, Please Refresh Page
-    </p>
-  ) : (
+  return (
     <div className="w-full h-[55vh] lg:h-[70vh] relative overflow-hidden">
       <Swiper
         spaceBetween={0}
@@ -52,7 +34,7 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
         modules={[Autoplay, Pagination, Navigation]}
         className="h-full"
       >
-        {data.map((slide: Slide) => (
+        {slides.map((slide, index) => (
           <SwiperSlide key={slide.id}>
             <Link href={`/search?q=${encodeURIComponent(slide.title)}`}>
               <div className="w-full h-[55vh] lg:h-[70vh] relative overflow-hidden bg-[--color-columbia-blue]">
@@ -62,7 +44,13 @@ router.push(`/search?q=${encodeURIComponent(title)}`);
                   alt={slide.title}
                   className="w-full h-full object-cover object-center sm:object-right brightness-105 saturate-[1.15]"
                   sizes="100vw"
-                  priority
+                  // Only the first slide is the LCP candidate, so only it gets a
+                  // preload. The rest still load eagerly — Swiper moves slides with
+                  // transforms, and native lazy loading leaves them blank until they
+                  // rotate in — but at low priority so they queue behind the LCP image.
+                  priority={index === 0}
+                  loading="eager"
+                  fetchPriority={index === 0 ? 'high' : 'low'}
                 />
                 {/* gradient scrim: lifts the image and makes text readable without a hard black box */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />

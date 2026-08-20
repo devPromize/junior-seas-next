@@ -120,6 +120,8 @@ const BrandCarousel = () => {
             <img
               src={brand.logo}
               alt={brand.name}
+              loading="lazy"
+              decoding="async"
               className="w-50 h-auto object-contain cursor-pointer lg:grayscale hover:grayscale-0 hover:scale-120 transition-all duration-500 sm:grayscale-0"
               onClick={() => handleBrandClick(brand.name)}
             />

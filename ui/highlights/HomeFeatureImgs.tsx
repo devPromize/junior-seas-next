@@ -27,6 +27,10 @@ const HomeFeatureImgs = ({
       src={src}
       alt={alt || src + ' hero'}
       className={mergedClassName}
+      // below the fold on the homepage: eager images here get auto-preloaded and
+      // compete with the hero carousel's LCP image
+      loading="lazy"
+      decoding="async"
     />
   );
 

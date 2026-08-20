@@ -45,6 +45,8 @@ const Footer = () => {
               src="/assets/icons/jsLogo.svg"
               alt="logo"
               className="w-50 invert"
+              loading="lazy"
+              decoding="async"
             />
 <div className="flex flex-col sm:flex-row">
 
@@ -204,21 +206,29 @@ const Footer = () => {
             src="/assets/icons/bankTransferIcon.svg"
             alt="payment-img"
             className="w-7"
+            loading="lazy"
+            decoding="async"
           />
           <img
             src="/assets/icons/bitcoinIcon.svg"
             alt="payment-img"
             className="w-7 "
+            loading="lazy"
+            decoding="async"
           />
           <img
             src="/assets/icons/visaIcon.svg"
             alt="payment-img"
             className="w-7"
+            loading="lazy"
+            decoding="async"
           />
           <img
             src="/assets/icons/masterCardIcon.png"
             alt="payment-img"
             className="w-7"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </Container>
