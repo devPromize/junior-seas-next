@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Legacy POS import tool data (contains customer details; never commit)
+tools/legacy-import/.data/
