@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.{test,spec}.ts", "**/*.{test,spec}.ts"],
+    // The POS app in apps/pos is a separate project with its own tests.
+    exclude: ["**/node_modules/**", "apps/**"],
   },
 });

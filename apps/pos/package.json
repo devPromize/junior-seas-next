@@ -1,0 +1,27 @@
+{
+  "name": "junior-seas-pos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Junior Seas point of sale. Deployed separately from the website, so a website problem can't stop the tills.",
+  "scripts": {
+    "dev": "next dev --turbopack --port 3001",
+    "build": "next build --turbopack",
+    "start": "next start --port 3001",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.50.2",
+    "next": "^15.5.9",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5"
+  }
+}
