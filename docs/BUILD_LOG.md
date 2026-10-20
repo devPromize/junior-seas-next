@@ -298,3 +298,36 @@ migration runs as a single transaction. That's why we run imports that way.
 - Screenshot: the test report, 28 PASS lines, ending "28 passed, 0 failed".
 - The alert text: "Test Cashier applied ₦10,000 off JS-0000005 (IPHONE XR 64GB, REDMI
   CERAMICS SCREEN GUARD MI 12). Paid ₦236,000. Authorised by Test Manager."
+
+---
+
+## 2026-10-21 · Session 8: The POS app takes shape
+
+**What we built**
+- `apps/pos`, a separate Next.js app for the tills. It has its own build and settings, so the
+  website and the POS can be deployed, and fail, independently.
+- A safe doorway to the database: the POS calls only a small set of `pos_*` functions, each
+  of which checks the caller is active staff with the right permission. The POS tables
+  themselves can't be reached from outside. 14 more tests, all passing.
+- **Customer capture:** phone and name required together, any phone format stored the same
+  way (0803…, +234…, 234…), returning customers recognised from their number, and a
+  "Customer declined" button instead of a silent blank, so reports can show who captures
+  details and who skips it.
+- **The Sell screen:**
+  - The whole catalogue (3,879 products, 537 phones) loads onto the device once, so search
+    and scanning answer instantly with no network wait.
+  - A laptop barcode scanner works from anywhere on the screen, and a phone camera is the
+    backup.
+  - Picking a phone model shows its in-stock IMEIs.
+  - Items are taken from whichever floor has them.
+  - A wholesale price toggle shows for staff who are allowed it.
+  - Place order sends the order to the cashier.
+
+**What we learned**
+- The old system's customer form had over 40 fields and 88% of sales ended up "Walk-In".
+  The new form asks for two things up front, phone and name, and makes skipping visible
+  rather than silent.
+
+**Worth showing**
+- Screen recording: scan two items, type a phone number, watch "Returning customer" appear,
+  place the order. Use test data, and blur any real customer details.

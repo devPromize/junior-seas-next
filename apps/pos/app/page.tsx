@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { can, FLOOR_COOKIE, type Me } from '@/lib/pos';
@@ -59,7 +60,7 @@ export default async function Home() {
 
       <section className="grid gap-3 sm:grid-cols-2">
         {can(me, 'sales.create') && (
-          <Tile title="Sell" note="Scan items, add the customer, place the order" ready={false} />
+          <Tile title="Sell" note="Scan items, add the customer, place the order" ready={!!floor} href="/sell" />
         )}
         {can(me, 'sales.checkout') && (
           <Tile title="Checkout queue" note="Orders waiting to be paid on this floor" ready={false} />
@@ -74,12 +75,24 @@ export default async function Home() {
   );
 }
 
-function Tile({ title, note, ready }: { title: string; note: string; ready: boolean }) {
-  return (
-    <div className={`rounded-xl border border-line bg-panel p-4 ${ready ? '' : 'opacity-60'}`}>
+function Tile({ title, note, ready, href }: { title: string; note: string; ready: boolean; href?: string }) {
+  const body = (
+    <>
       <p className="text-lg font-semibold">{title}</p>
       <p className="text-sm text-ink-soft">{note}</p>
-      {!ready && <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-ink-soft">Coming next</p>}
-    </div>
+      {!ready && (
+        <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-ink-soft">
+          {href ? 'Choose a floor first' : 'Coming next'}
+        </p>
+      )}
+    </>
   );
+  if (ready && href) {
+    return (
+      <Link href={href} className="rounded-xl border border-brand bg-panel p-4 hover:bg-brand-soft">
+        {body}
+      </Link>
+    );
+  }
+  return <div className="rounded-xl border border-line bg-panel p-4 opacity-60">{body}</div>;
 }
