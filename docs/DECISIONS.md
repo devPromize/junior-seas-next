@@ -241,3 +241,19 @@ payments can go into any of them. The cash-up can then be checked per account.
 **Choice:** The 178 inactive products that still showed stock were returned to suppliers or
 replaced by newer product records. They're marked resolved and taken off the confirm sheet,
 which is now 273 items.
+
+### D-032 · Discounts: applied instantly, recorded, and alerted (2026-10-21)
+**Choice:** Replaces D-027. The till never waits for a discount:
+- The cashier applies the discount the boss or manager agreed on the floor, on the whole order
+  or per item, and taps who authorised it. Reps can't be named, only people allowed to authorise.
+- The person named, and the owner, get an instant alert listing the receipt, the items, the
+  discount and who applied it. They can tap "I didn't approve this", which flags it to the owner.
+- A whole-order discount is spread across the items in proportion to their value, so profit
+  per product stays accurate.
+- Safety limit: only a discount above the quick-discount limit (₦50,000 by default, set in
+  Settings) needs a manager's PIN at the till or a tap on their phone. This mainly catches
+  typos, like ₦100,000 typed for ₦10,000. Five wrong PINs lock that PIN for 15 minutes.
+**Why:** Customers don't like delays, and in this shop a discount only exists because the boss or
+manager said so. The convention for owner-run shops is to trust, record and alert, with a
+threshold for unusual amounts, rather than ask for approval before every discount. The old
+system kept discounts in a free-text note, with no record of who agreed them.

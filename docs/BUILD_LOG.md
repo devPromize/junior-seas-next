@@ -249,3 +249,52 @@ migration runs as a single transaction. That's why we run imports that way.
   names only).
 - Screenshot: blueprint sheet A-401 with the "Allow Joy to refund sales?" warning, next to
   the matching warning text in the database.
+
+---
+
+## 2026-10-21 · Session 7: The till actions, and 28 passing tests
+
+**What we built**
+- The actions that make it a working POS. Each is one database function that checks
+  permission and stock and writes everything at once, so a sale either fully happens or
+  doesn't happen at all:
+  - **Place order** (rep): prices always come from the database, never from the screen.
+    Phones are held for 30 minutes.
+  - **Checkout** (cashier): split payments that must add up exactly, card and transfer tied to
+    an account, every phone re-checked, other items stop at zero, cost captured for profit.
+  - **Cancel order / remove item**: need a reason, and items go straight back on sale.
+  - **Return**: back to stock or marked faulty, refund never more than was paid, the same item
+    can't be returned twice.
+  - **Housekeeping**: expired holds released, and unfinished orders cancelled at midnight
+    (Nigerian time).
+- Error messages written for the person at the till, e.g. "This phone is already in order
+  JS-0000001." or "Not enough … in stock (the system shows 39)."
+- An automated test script that pretends to be two reps, a cashier and a manager, runs real
+  sales against real stock, then rolls everything back. **28 passed, 0 failed.**
+
+**What changed, and why**
+- Discounts were redesigned twice in one session (D-032). The first version needed approval
+  before every discount, which would slow the queue. The owner explained how it really works:
+  a discount only exists because the boss or manager agreed it on the floor. The final design
+  is the common convention for owner-run shops: the cashier applies it instantly and taps who
+  authorised it, that person gets an alert listing the items, and only an unusually large
+  discount (over ₦50,000) asks for a manager's PIN.
+
+**What broke, and how we fixed it**
+- *A missing `$`.* **What happened:** an automated edit dropped a `$` from a database
+  function, which would have stopped the whole migration. **How we found it:** reading the
+  final file back in full before applying it. **Fix:** restored the markers and checked the
+  rest of the file for the same problem. The cause: in JavaScript's `string.replace()`, `$$`
+  in the replacement text means a single `$`.
+
+**What we learned**
+- Designing for the shop floor beats designing for the textbook. "Approve every discount" is
+  the textbook. "Trust, record, alert" is what a busy shop needs.
+- Tests that act out real situations ("two reps scan the same phone") catch the bugs that
+  matter, and running them in a rolled-back transaction means testing against real data
+  is safe.
+
+**Worth showing**
+- Screenshot: the test report, 28 PASS lines, ending "28 passed, 0 failed".
+- The alert text: "Test Cashier applied ₦10,000 off JS-0000005 (IPHONE XR 64GB, REDMI
+  CERAMICS SCREEN GUARD MI 12). Paid ₦236,000. Authorised by Test Manager."
