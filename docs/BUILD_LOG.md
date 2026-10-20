@@ -214,3 +214,38 @@ migration runs as a single transaction. That's why we run imports that way.
   business looks like.
 - A short clip or screenshot of the database refusing to delete a stock movement
   ("Stock movements cannot be changed or deleted").
+
+---
+
+## 2026-10-20 · Session 6: Staff, customers and sales tables, and a stock confirmation sheet
+
+**What we built**
+- The rest of the POS's data foundations: 23 permissions (10 marked sensitive, each with the
+  warning the owner sees before granting it), 7 starting roles, staff with per-person
+  permission changes, customers (phone first, three separate consents, business fields),
+  payment accounts, sales with split payments, returns and an append-only audit log.
+- Wholesale prices on every item, optional, plus the permissions to set them and sell at them.
+- Laptops and tablets now carry serial numbers, not IMEIs. That's why 6 laptops "failed" the
+  IMEI check during the import.
+- A printable stock confirmation workbook, one tab per floor, for staff to check while we're
+  still on the old system: 273 items.
+
+**What changed after review** (D-027 to D-031)
+- Discounts: managers only by default.
+- Staff aren't tied to a floor: people move around.
+- Payments: method plus account, because the banks will change.
+- The 178 "inactive but showing stock" products were stock returned to suppliers, or old
+  records replaced when phones moved floors. They're confirmed out.
+
+**What we learned**
+- The confirm list taught us something about the data: "inactive with stock" wasn't missing
+  stock, it was history (supplier returns, a floor move). One question to the owner settled
+  178 rows.
+- Asking "will this still be true in six months?" removed two designs: fixed staff floors,
+  and payment methods named after specific banks.
+
+**Worth showing**
+- Screenshot: one page of the printed stock confirmation sheet (blur nothing; it's product
+  names only).
+- Screenshot: blueprint sheet A-401 with the "Allow Joy to refund sales?" warning, next to
+  the matching warning text in the database.

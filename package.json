@@ -49,6 +49,7 @@
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
+    "exceljs": "^4.4.0",
     "globals": "^15.14.0",
     "playwright": "^1.48.2",
     "slugify": "^1.6.6",

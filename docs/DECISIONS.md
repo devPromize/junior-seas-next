@@ -210,3 +210,34 @@ actually sell first, using moments that are already happening.
 across. Their sales history stays in our raw copy. 178 of them still show stock in the old
 system, so they're on the review list in case some are real items deactivated by mistake.
 Anything the old system shows below zero starts at zero, with the old number kept on the list.
+
+### D-027 · Only managers give discounts by default (2026-10-20)
+**Choice:** Discounts are a sensitive permission held by managers (limit ₦20,000) and the
+owner. Cashiers and reps start without it, and a manager or owner can grant it to anyone,
+with a limit.
+**Why:** It's how the shop works today, and discounts are where money quietly leaks.
+
+### D-028 · Every item can carry a wholesale price (2026-10-20)
+**Choice:** Items have an optional wholesale price and an optional minimum wholesale quantity.
+Empty means no wholesale price, and nothing else changes. Managers and inventory officers can
+set it (permission "Set wholesale prices"). Selling at the wholesale price is a separate
+permission, held by managers by default. Each sale line records whether it was retail or
+wholesale.
+**Why:** Today the boss or manager has to be called for every wholesale sale to quote the price
+again. With the price stored once, whoever is allowed can sell wholesale consistently.
+
+### D-029 · Staff aren't tied to a floor (2026-10-20)
+**Choice:** A staff record has a role, but no fixed floor. The floor someone works on comes from
+the till or device they're using that day.
+**Why:** People move between floors, and a fixed assignment would go stale immediately.
+
+### D-030 · A payment is a method plus an account (2026-10-20)
+**Choice:** A payment is cash, transfer, card or online, plus which account the money went into
+(e.g. transfer to OPay, card on Nombank). The owner manages the list of accounts in Settings.
+**Why:** The banks and card providers will change over time, and both transfers and card
+payments can go into any of them. The cash-up can then be checked per account.
+
+### D-031 · Inactive products confirmed out (2026-10-20)
+**Choice:** The 178 inactive products that still showed stock were returned to suppliers or
+replaced by newer product records. They're marked resolved and taken off the confirm sheet,
+which is now 273 items.
