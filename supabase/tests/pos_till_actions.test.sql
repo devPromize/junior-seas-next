@@ -37,7 +37,10 @@ begin
   select v_cash, 'Test Cashier', id from pos.roles where name = 'Cashier' union all
   select v_mgr,  'Test Manager', id from pos.roles where name = 'Manager';
 
-  select id into v_floor from pos.floors where code = 'first';
+  insert into pos.staff_departments (user_id, floor_id)
+  select s.id, f.id from unnest(array[v_rep1, v_rep2, v_cash, v_mgr]) s(id) cross join pos.floors f where f.is_active;
+
+  select id into v_floor from pos.floors where code = 'phones';
   select id into v_opay from pos.payment_accounts where name = 'OPay';
 
   select ui.code, u.id, i.price_kobo into v_phone1, v_unit1, v_phone_price

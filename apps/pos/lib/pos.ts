@@ -1,6 +1,8 @@
 // Shared POS types and helpers.
 
-export type Floor = { id: number; code: string; name: string };
+// A department: Mobile Phones, Accessories, Spare Parts & Repairs. Staff see only the ones the
+// owner gave them access to; the owner sees all of them.
+export type Department = { id: number; code: string; name: string };
 export type PaymentAccount = { id: number; name: string; transfer: boolean; card: boolean; online: boolean };
 export type Person = { user_id: string; name: string };
 
@@ -12,7 +14,7 @@ export type Me = {
   is_owner: boolean;
   has_pin: boolean;
   permissions: string[];
-  floors: Floor[];
+  departments: Department[];
   payment_accounts: PaymentAccount[];
   authorisers: Person[] | null;
   settings: Record<string, unknown>;
@@ -28,6 +30,3 @@ export function naira(kobo: number): string {
     maximumFractionDigits: 2,
   });
 }
-
-// The cookie that remembers which floor this device is working on today.
-export const FLOOR_COOKIE = 'pos_floor';

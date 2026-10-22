@@ -1,28 +1,43 @@
--- Automated tests for the POS app's entry points (supabase/migrations/20261021_pos_app_api.sql).
+-- Automated tests for the POS app's entry points (supabase/migrations/20261021_pos_app_api.sql
+-- and 20261022_pos_departments.sql).
 -- Same approach as pos_till_actions.test.sql: runs as pretend staff, then rolls everything back.
 
 do $test$
 declare
   r      text[] := '{}';
-  v_rep  uuid := gen_random_uuid();
-  v_cash uuid := gen_random_uuid();
+  v_rep  uuid := gen_random_uuid();   -- has access to Accessories only
+  v_cash uuid := gen_random_uuid();   -- has access to every department
+  v_new  uuid := gen_random_uuid();   -- just added, no departments yet
+  v_boss uuid := gen_random_uuid();   -- owner
   v_web  uuid := gen_random_uuid();   -- a website customer account, not staff
-  v_floor smallint;
-  v_item bigint; v_item_floor smallint;
+  v_acc  smallint; v_phones smallint;
+  v_item bigint;
+  v_phone text;
   v_res  jsonb; v_res2 jsonb;
   v_cust uuid;
 begin
   insert into auth.users (id, email, aud, role) values
     (v_rep,  'api-rep@example.test', 'authenticated', 'authenticated'),
     (v_cash, 'api-cashier@example.test', 'authenticated', 'authenticated'),
+    (v_new,  'api-new@example.test', 'authenticated', 'authenticated'),
+    (v_boss, 'api-owner@example.test', 'authenticated', 'authenticated'),
     (v_web,  'api-shopper@example.test', 'authenticated', 'authenticated');
   insert into pos.staff (user_id, display_name, role_id)
   select v_rep, 'API Rep', id from pos.roles where name = 'Sales rep' union all
-  select v_cash, 'API Cashier', id from pos.roles where name = 'Cashier';
-  select id into v_floor from pos.floors where code = 'ground';
-  select l.item_id, l.floor_id into v_item, v_item_floor
+  select v_cash, 'API Cashier', id from pos.roles where name = 'Cashier' union all
+  select v_new, 'API New Rep', id from pos.roles where name = 'Sales rep' union all
+  (select v_boss, 'API Owner', id from pos.roles where is_owner limit 1);
+  select id into v_acc from pos.floors where code = 'accessories';
+  select id into v_phones from pos.floors where code = 'phones';
+  insert into pos.staff_departments (user_id, floor_id)
+  select v_rep, v_acc union all
+  select v_cash, f.id from pos.floors f where f.is_active;
+  select l.item_id into v_item
   from pos.stock_levels l join pos.items i on i.id = l.item_id
-  where not i.tracks_imei and i.is_active and l.quantity > 5 order by l.item_id limit 1;
+  where not i.tracks_imei and i.is_active and l.floor_id = v_acc and l.quantity > 5 order by l.item_id limit 1;
+  select ui.code into v_phone
+  from pos.phone_units u join pos.unit_identifiers ui on ui.unit_id = u.id and ui.slot = 1
+  where u.status = 'in_stock' and u.floor_id = v_phones limit 1;
 
   -- 1. phone numbers in every common format become one standard format
   r := r || case when pos.normalize_phone('0803 123 4567') = '+2348031234567'
@@ -41,19 +56,21 @@ begin
     r := r || case when sqlerrm like 'This account isn''t set up as staff%' then 'PASS 2  non-staff refused: ' || sqlerrm else 'FAIL 2  ' || sqlerrm end;
   end;
 
-  -- 3. who am I
+  -- 3. who am I: a rep sees only the departments they were given
   perform set_config('request.jwt.claims', json_build_object('sub', v_rep, 'role', 'authenticated')::text, true);
   v_res := public.pos_me();
   r := r || case when v_res->>'role' = 'Sales rep' and v_res->'permissions' ? 'sales.create'
-                  and not (v_res->'permissions' ? 'sales.checkout') and jsonb_array_length(v_res->'floors') = 3
-                 then 'PASS 3  rep sees their role, permissions and floors' else 'FAIL 3  ' || v_res::text end;
+                  and not (v_res->'permissions' ? 'sales.checkout')
+                  and jsonb_array_length(v_res->'departments') = 1 and v_res->'departments'->0->>'name' = 'Accessories'
+                 then 'PASS 3  rep sees their role, permissions and only Accessories' else 'FAIL 3  ' || v_res::text end;
 
-  -- 4. the catalogue loads in one go
+  -- 4. the rep's catalogue has Accessories stock and no phones
   v_res := public.pos_catalogue();
-  r := r || case when jsonb_array_length(v_res->'items') > 3000 and jsonb_array_length(v_res->'units') > 400
-                 then format('PASS 4  catalogue: %s items, %s stock rows, %s phones',
-                             jsonb_array_length(v_res->'items'), jsonb_array_length(v_res->'stock'), jsonb_array_length(v_res->'units'))
-                 else 'FAIL 4  catalogue too small' end;
+  r := r || case when jsonb_array_length(v_res->'items') > 1000 and jsonb_array_length(v_res->'units') = 0
+                  and not exists (select 1 from jsonb_array_elements(v_res->'stock') s where (s->>1)::int <> v_acc)
+                 then format('PASS 4  Accessories rep''s catalogue: %s items, %s stock rows, no phones',
+                             jsonb_array_length(v_res->'items'), jsonb_array_length(v_res->'stock'))
+                 else 'FAIL 4  catalogue not limited to Accessories' end;
 
   -- 5. a customer needs a name
   begin
@@ -88,42 +105,71 @@ begin
 
   -- 9. an order needs a customer or "Customer declined"
   begin
-    perform public.pos_place_order(v_item_floor, jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)));
+    perform public.pos_place_order(jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)));
     r := r || 'FAIL 9  order placed with no customer and no "declined"';
   exception when others then
     r := r || case when sqlerrm like 'Add the customer''s phone and name, or tap%' then 'PASS 9  ' || sqlerrm else 'FAIL 9  ' || sqlerrm end;
   end;
 
-  -- 10. "Customer declined" is recorded on the sale
-  v_res := public.pos_place_order(v_item_floor, jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)), null, true);
+  -- 10. "Customer declined" is recorded on the sale; no floor or department is sent
+  v_res := public.pos_place_order(jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)), null, true);
   r := r || case when (select customer_declined from pos.sales where id = (v_res->>'sale_id')::uuid)
-                 then 'PASS 10 "Customer declined" recorded' else 'FAIL 10 declined not recorded' end;
+                  and (select floor_id from pos.sale_lines where sale_id = (v_res->>'sale_id')::uuid) = v_acc
+                 then 'PASS 10 "Customer declined" recorded, item taken from Accessories' else 'FAIL 10 declined not recorded' end;
 
   -- 11. an order with a customer links them
-  v_res := public.pos_place_order(v_item_floor, jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 2)), v_cust);
+  v_res := public.pos_place_order(jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 2)), v_cust);
   r := r || case when (select customer_id from pos.sales where id = (v_res->>'sale_id')::uuid) = v_cust
                  then 'PASS 11 customer linked to the order' else 'FAIL 11 customer not linked' end;
 
-  -- 12. reps can't see the cashier's queue; the cashier can
+  -- 12. an Accessories rep can't sell a phone, and the phone stays on sale
   begin
-    perform public.pos_order_queue(v_item_floor);
-    r := r || 'FAIL 12a a rep opened the checkout queue';
+    perform public.pos_place_order(jsonb_build_array(jsonb_build_object('code', v_phone)), null, true);
+    r := r || 'FAIL 12a Accessories rep sold a phone';
   exception when others then
-    r := r || case when sqlerrm like 'You don''t have permission%' then 'PASS 12a rep can''t open the queue' else 'FAIL 12a ' || sqlerrm end;
+    r := r || case when sqlerrm like 'You don''t have access to Mobile Phones%' then 'PASS 12a ' || sqlerrm else 'FAIL 12a ' || sqlerrm end;
+  end;
+  r := r || case when (select u.status from pos.phone_units u join pos.unit_identifiers ui on ui.unit_id = u.id
+                       where ui.code = v_phone) = 'in_stock'
+                 then 'PASS 12b the phone stayed on sale' else 'FAIL 12b the phone was held' end;
+
+  -- 13. someone just added, with no departments, sees a clear message and can't sell
+  perform set_config('request.jwt.claims', json_build_object('sub', v_new, 'role', 'authenticated')::text, true);
+  begin
+    perform public.pos_place_order(jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)), null, true);
+    r := r || 'FAIL 13 sold with no departments';
+  exception when others then
+    r := r || case when sqlerrm like 'You haven''t been given access to any department%'
+                    and jsonb_array_length(public.pos_me()->'departments') = 0
+                   then 'PASS 13 ' || sqlerrm else 'FAIL 13 ' || sqlerrm end;
+  end;
+
+  -- 14. the owner sees every department without being given any
+  perform set_config('request.jwt.claims', json_build_object('sub', v_boss, 'role', 'authenticated')::text, true);
+  r := r || case when jsonb_array_length(public.pos_me()->'departments') = (select count(*) from pos.floors where is_active)
+                 then 'PASS 14 owner sees every department' else 'FAIL 14 owner missing departments' end;
+
+  -- 15. reps can't see the cashier's queue; the cashier can
+  perform set_config('request.jwt.claims', json_build_object('sub', v_rep, 'role', 'authenticated')::text, true);
+  begin
+    perform public.pos_order_queue();
+    r := r || 'FAIL 15a a rep opened the checkout queue';
+  exception when others then
+    r := r || case when sqlerrm like 'You don''t have permission%' then 'PASS 15a rep can''t open the queue' else 'FAIL 15a ' || sqlerrm end;
   end;
   perform set_config('request.jwt.claims', json_build_object('sub', v_cash, 'role', 'authenticated')::text, true);
-  v_res := public.pos_order_queue(v_item_floor);
+  v_res := public.pos_order_queue();
   r := r || case when jsonb_array_length(v_res) >= 2
                   and exists (select 1 from jsonb_array_elements(v_res) o where o->'customer'->>'name' = 'Chika Okafor')
-                 then format('PASS 12b cashier sees %s waiting orders, with the customer''s name', jsonb_array_length(v_res))
-                 else 'FAIL 12b queue wrong: ' || v_res::text end;
+                 then format('PASS 15b cashier sees %s waiting orders, with the customer''s name', jsonb_array_length(v_res))
+                 else 'FAIL 15b queue wrong: ' || v_res::text end;
 
-  -- 13. the cashier checks out through the app's entry point
+  -- 16. the cashier checks out through the app's entry point
   v_res2 := v_res->0;
   perform public.pos_checkout((v_res2->>'sale_id')::uuid,
     jsonb_build_array(jsonb_build_object('method', 'cash', 'amount_kobo', (v_res2->>'subtotal_kobo')::bigint)));
   r := r || case when (select status from pos.sales where id = (v_res2->>'sale_id')::uuid) = 'paid'
-                 then 'PASS 13 checkout through the app entry point' else 'FAIL 13 not paid' end;
+                 then 'PASS 16 checkout through the app entry point' else 'FAIL 16 not paid' end;
 
   raise exception E'TEST REPORT (all changes rolled back)\n%\n\n% passed, % failed',
     array_to_string(r, E'\n'),

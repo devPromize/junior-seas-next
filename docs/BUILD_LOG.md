@@ -331,3 +331,35 @@ migration runs as a single transaction. That's why we run imports that way.
 **Worth showing**
 - Screen recording: scan two items, type a phone number, watch "Returning customer" appear,
   place the order. Use test data, and blur any real customer details.
+
+---
+
+## 2026-10-22 · Session 9: Departments instead of floors, and fewer steps
+
+**What changed, and why** (D-033)
+- First real use of the Sell screen. The owner had to answer "Which floor is this device on
+  today?" before selling, and searches showed "none here · 12 in the shop". Both made no sense
+  for someone with access to everything, and the floor names would go stale when departments
+  move.
+- Now there are three departments (Mobile Phones, Accessories, Spare Parts & Repairs) and no
+  floors anywhere on screen. Each person gets access to departments when they're added; the
+  owner has them all.
+- The floor picker is gone. Reps open straight onto the Sell screen, search everything they
+  have access to, and see one plain stock number ("12 in stock").
+- The database enforces access, so a hidden screen can't be worked around: an Accessories rep
+  who scans a phone is told "You don't have access to Mobile Phones, where the SAMSUNG A07
+  4+128GB is." and the phone stays on sale.
+
+**Tests:** 18 app tests (6 new, for department access) and the 28 till tests: **46 passed,
+0 failed.**
+
+**What we learned**
+- Ten minutes of using the real thing beat a day of design. Each extra question on screen
+  needs a reason the person at the till would agree with.
+- Slow clicks on the local test server are mostly the development server building each page
+  the first time it's opened. The catalogue itself loads from the database in about 0.1
+  seconds (429 kB). We'll measure on the deployed version before optimising.
+
+**Worth showing**
+- Before/after screenshots: the "Which floor is this device on today?" home screen, and the
+  rep landing straight on Sell.

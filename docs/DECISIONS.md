@@ -257,3 +257,15 @@ which is now 273 items.
 manager said so. The convention for owner-run shops is to trust, record and alert, with a
 threshold for unusual amounts, rather than ask for approval before every discount. The old
 system kept discounts in a free-text note, with no record of who agreed them.
+
+### D-033 · Departments, not floors; access set per person (2026-10-22)
+**Choice:** Replaces D-029. The shop's sections are departments: Mobile Phones, Accessories,
+and Spare Parts & Repairs. The POS never names a floor, because which floor a department sits
+on can change. When the owner adds someone, they choose which departments that person can
+access. People see and sell only from those departments, and the cashier's queue shows orders
+containing their departments' items. The owner sees everything. Nobody picks a floor or a
+department before selling: they search, and each item is taken from the department that holds
+it. One order still gets one receipt, whichever departments its items come from. Someone with
+only selling to do opens straight onto the Sell screen.
+**Why:** Asking "which floor is this device on today?" was an extra step that added nothing.
+Access is about the person, not the device.

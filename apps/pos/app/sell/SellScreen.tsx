@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { can, naira, type Floor, type Me } from '@/lib/pos';
+import { can, naira, type Me } from '@/lib/pos';
 import {
   buildCatalogue, lookupCode, phonesInStock, search, stockOn,
   type Catalogue, type Item, type Unit,
@@ -11,7 +11,7 @@ import {
 import CameraScanner from '@/components/CameraScanner';
 
 type Tier = 'retail' | 'wholesale';
-type Line = { key: string; item: Item; unit?: Unit; qty: number; floorId: number; tier: Tier };
+type Line = { key: string; item: Item; unit?: Unit; qty: number; departmentId: number; tier: Tier };
 type FoundCustomer = { id: string; name: string; phone: string; purchases: number };
 
 const HEARD_FROM: [string, string][] = [
@@ -31,7 +31,7 @@ const CATALOGUE_REFRESH_MS = 3 * 60 * 1000;
 const phoneDigits = (p: string) => p.replace(/\D/g, '');
 const looksLikePhone = (p: string) => phoneDigits(p).length >= 10;
 
-export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
+export default function SellScreen({ me }: { me: Me }) {
   const supabase = useMemo(() => createClient(), []);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -58,7 +58,6 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
   const [note, setNote] = useState('');
   const [placing, setPlacing] = useState(false);
 
-  const floorName = (id: number) => me.floors.find((f) => f.id === id)?.name ?? '';
   const canWholesale = can(me, 'sales.wholesale');
 
   // ---------- catalogue ----------
@@ -100,7 +99,7 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
     if (!item) return;
     if (unit.status === 'held') return say('bad', 'This phone is already in another order.');
     if (lines.some((l) => l.unit?.id === unit.id)) return say('bad', 'That phone is already in this order.');
-    setLines((prev) => [...prev, { key: unit.id, item, unit, qty: 1, floorId: unit.floorId, tier: 'retail' }]);
+    setLines((prev) => [...prev, { key: unit.id, item, unit, qty: 1, departmentId: unit.departmentId, tier: 'retail' }]);
     say('ok', `Added ${item.name}`);
     setPicking(null);
   }, [cat, lines]);
@@ -111,19 +110,17 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
       setPicking(item);   // a phone: choose which one, by IMEI
       return;
     }
-    // Take it from this floor if it's in stock here, otherwise from the floor that has it.
-    let floorId = floor.id;
-    if (stockOn(cat, item.id, floor.id) <= 0) {
-      const other = me.floors.map((f) => f.id).find((id) => stockOn(cat, item.id, id) > 0);
-      if (other) floorId = other;
-    }
+    // Take it from the department that holds the most of it.
+    const departmentId = me.departments
+      .map((d) => d.id)
+      .reduce((best, id) => (stockOn(cat, item.id, id) > stockOn(cat, item.id, best) ? id : best), me.departments[0]?.id ?? 0);
     setLines((prev) => {
-      const same = prev.find((l) => !l.unit && l.item.id === item.id && l.floorId === floorId && l.tier === 'retail');
+      const same = prev.find((l) => !l.unit && l.item.id === item.id && l.departmentId === departmentId && l.tier === 'retail');
       if (same) return prev.map((l) => (l === same ? { ...l, qty: l.qty + 1 } : l));
-      return [...prev, { key: `${item.id}:${floorId}:${Date.now()}`, item, qty: 1, floorId, tier: 'retail' }];
+      return [...prev, { key: `${item.id}:${departmentId}:${Date.now()}`, item, qty: 1, departmentId, tier: 'retail' }];
     });
     say('ok', `Added ${item.name}`);
-  }, [cat, floor.id, me.floors]);
+  }, [cat, me.departments]);
 
   const handleCode = useCallback((code: string) => {
     if (!cat || !code.trim()) return;
@@ -195,11 +192,10 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
       }
       const discountKobo = Math.round(Number(discount || 0) * 100);
       const { data, error } = await supabase.rpc('pos_place_order', {
-        p_floor_id: floor.id,
         p_lines: lines.map((l) =>
           l.unit
             ? { code: l.unit.codes[0], price_tier: l.tier }
-            : { item_id: l.item.id, qty: l.qty, floor_id: l.floorId, price_tier: l.tier }),
+            : { item_id: l.item.id, qty: l.qty, floor_id: l.departmentId, price_tier: l.tier }),
         p_customer_id: customerId,
         p_customer_declined: declined,
         p_rep_note: note || null,
@@ -223,7 +219,6 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
       <header className="flex flex-wrap items-center gap-3">
         <Link href="/" className="rounded-lg border border-line bg-panel px-3 py-2 font-medium">← Home</Link>
         <h1 className="text-xl font-bold">Sell</h1>
-        <span className="rounded-full bg-brand-soft px-3 py-1 text-sm font-semibold text-brand">{floor.name}</span>
         <span className="ml-auto text-sm text-ink-soft">{me.name}</span>
         <button onClick={() => setCamera(true)} className="rounded-lg border border-line bg-panel px-3 py-2 font-medium">
           Scan with camera
@@ -267,9 +262,8 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
               <div className="flex max-h-64 flex-col gap-1 overflow-y-auto">
                 {phonesInStock(cat, picking.id).map((u) => (
                   <button key={u.id} onClick={() => addUnit(u)}
-                    className="flex justify-between rounded-md bg-panel px-3 py-2 text-left font-mono text-sm">
-                    <span>{u.codes.join(' / ') || 'no IMEI'}</span>
-                    <span className="text-ink-soft">{floorName(u.floorId)}</span>
+                    className="rounded-md bg-panel px-3 py-2 text-left font-mono text-sm">
+                    {u.codes.join(' / ') || 'no IMEI'}
                   </button>
                 ))}
                 {phonesInStock(cat, picking.id).length === 0 && <p className="text-sm">None in stock.</p>}
@@ -279,12 +273,9 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
 
           <ul className="flex flex-col divide-y divide-line">
             {results.map((item) => {
-              const here = item.tracksImei
-                ? phonesInStock(cat!, item.id).filter((u) => u.floorId === floor.id).length
-                : stockOn(cat!, item.id, floor.id);
-              const anywhere = item.tracksImei
+              const inStock = item.tracksImei
                 ? phonesInStock(cat!, item.id).length
-                : me.floors.reduce((s, f) => s + Math.max(0, stockOn(cat!, item.id, f.id)), 0);
+                : me.departments.reduce((s, d) => s + Math.max(0, stockOn(cat!, item.id, d.id)), 0);
               return (
                 <li key={item.id}>
                   <button onClick={() => { addItem(item); if (!item.tracksImei) setQuery(''); }}
@@ -292,7 +283,7 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
                     <span>
                       <span className="block font-medium">{item.name}</span>
                       <span className="text-sm text-ink-soft">
-                        {here > 0 ? `${here} here` : 'none here'}{anywhere > here ? ` · ${anywhere} in the shop` : ''}
+                        {inStock > 0 ? `${inStock} in stock` : 'Out of stock'}
                         {item.tracksImei ? ' · tracked by IMEI' : ''}
                       </span>
                     </span>
@@ -321,7 +312,6 @@ export default function SellScreen({ me, floor }: { me: Me; floor: Floor }) {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
                     {l.unit && <span className="font-mono">IMEI {l.unit.codes[0]}</span>}
-                    {l.floorId !== floor.id && <span>from {floorName(l.floorId)}</span>}
                     {!l.unit && (
                       <span className="flex items-center gap-1">
                         <button aria-label="One fewer" onClick={() => changeQty(l.key, -1)} className="h-8 w-8 rounded-md border border-line">−</button>

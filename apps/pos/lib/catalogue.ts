@@ -15,7 +15,7 @@ export type Item = {
 export type Unit = {
   id: string;
   itemId: number;
-  floorId: number;
+  departmentId: number;
   status: 'in_stock' | 'held';
   codes: string[];            // IMEI 1 (and IMEI 2) or a serial number
 };
@@ -26,7 +26,7 @@ export type Catalogue = {
   bySku: Map<string, Item>;
   byCode: Map<string, Unit>;               // any IMEI or serial -> the phone
   unitsByItem: Map<number, Unit[]>;
-  stock: Map<string, number>;              // `${itemId}:${floorId}` -> quantity
+  stock: Map<string, number>;              // `${itemId}:${departmentId}` -> quantity
   searchText: Map<number, string>;         // lower-case text each item is searched by
 };
 
@@ -49,12 +49,12 @@ export function buildCatalogue(raw: Raw): Catalogue {
   }
 
   const stock = new Map<string, number>();
-  for (const [itemId, floorId, qty] of raw.stock) stock.set(`${itemId}:${floorId}`, qty);
+  for (const [itemId, departmentId, qty] of raw.stock) stock.set(`${itemId}:${departmentId}`, qty);
 
   const byCode = new Map<string, Unit>();
   const unitsByItem = new Map<number, Unit[]>();
-  for (const [id, itemId, floorId, status, codes] of raw.units) {
-    const unit: Unit = { id, itemId, floorId, status, codes: codes ?? [] };
+  for (const [id, itemId, departmentId, status, codes] of raw.units) {
+    const unit: Unit = { id, itemId, departmentId, status, codes: codes ?? [] };
     for (const c of unit.codes) byCode.set(c, unit);
     const list = unitsByItem.get(itemId) ?? [];
     list.push(unit);
@@ -64,8 +64,8 @@ export function buildCatalogue(raw: Raw): Catalogue {
   return { loadedAt: raw.loaded_at, items, bySku, byCode, unitsByItem, stock, searchText };
 }
 
-export const stockOn = (cat: Catalogue, itemId: number, floorId: number) =>
-  cat.stock.get(`${itemId}:${floorId}`) ?? 0;
+export const stockOn = (cat: Catalogue, itemId: number, departmentId: number) =>
+  cat.stock.get(`${itemId}:${departmentId}`) ?? 0;
 
 // Phones of this model that can be sold right now (not held in another order).
 export const phonesInStock = (cat: Catalogue, itemId: number) =>
