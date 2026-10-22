@@ -427,3 +427,38 @@ wrong cashier can't see or take the order, and an order can't be paid twice). Al
 **Worth showing**
 - Screen recording: Sell on one screen, the order appearing in Checkout on another a few
   seconds later, split payment, then the printed receipt.
+
+---
+
+## 2026-10-22 · Session 12: Products and stock
+
+**What we built** (D-035)
+- **Products:** a searchable list of all 3,879 products (by name, barcode, category, brand or
+  even a phone's IMEI), filtered by department, category and in/out of stock, 50 per page.
+  Costs only show to people allowed to see them.
+- **Each product's page:** edit details and prices (fields you can't change are locked),
+  stock in each department, every phone in stock by IMEI with Missing / Faulty / Back in stock,
+  and the product's full stock history (received, sold, moved, counted: who, when, why).
+- **Add product:** type a new category or brand straight into the form; leave the barcode
+  empty and the system makes one up.
+- **Stock → Receive a delivery:** choose the department and supplier, add products, scan each
+  phone's IMEI (both IMEIs for dual-SIM), and enter costs. The button shows the total pieces and
+  cost before you confirm.
+- **Stock → Move stock:** from one department to another, phones by IMEI scan.
+- **Shelf counts:** on the product page, type what's on the shelf and why it's different.
+
+**Data clean-up:** 14 product names and 7 categories from the old system had "&amp;" instead
+of "&", and 3 categories existed twice because of it. Fixed and merged.
+
+**What changed after review**
+- The Inventory officer role was described as "Receives, transfers and corrects stock" but
+  couldn't move stock. It can now.
+
+**Tests:** 18 new tests, all passing, including: an IMEI can't be received twice, you can't move
+more than you have, a phone marked missing leaves stock and comes back when found (even when
+found by its second IMEI), an inventory officer can't change selling prices or see costs, and
+every price change is logged from → to.
+
+**Worth showing**
+- A phone's product page: 30 IMEIs, each with its department and cost.
+- Receiving a delivery with a barcode scanner: scan, scan, scan, "Receive 3 pieces".

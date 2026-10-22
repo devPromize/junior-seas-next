@@ -287,3 +287,23 @@ first section (Sell, for a rep).
 **Why:** The owner wants to open the POS and see everything they can do, like the current
 system's dashboard and sidebar, but with Bumpa's simplicity: fewer, clearer sections and short
 forms.
+
+### D-035 · Products and stock: every change is a movement, every field has its own permission (2026-10-22)
+**Choice:**
+- Stock only ever changes through a recorded movement: received, sold, moved out/in, counted,
+  adjusted. Each product's page shows that history, so any number can be explained.
+- Receiving a delivery records the supplier, their invoice number and the cost. The product's
+  cost price becomes the latest cost received. Phones are received by scanning each IMEI
+  (dual-SIM: both, with "/") or serial number; an IMEI already in the system is refused.
+- Moving stock between departments: phones by IMEI, everything else by quantity.
+- Stock counts: the shelf count replaces the system's number, and the difference is kept with
+  a reason. Phones aren't counted by number: each one is marked missing or faulty (and back in
+  stock if it turns up).
+- Editing a product: details need "Create and edit products", the selling price needs
+  "Change prices", wholesale needs "Set wholesale prices", and cost needs "See cost prices".
+  Every change is logged with its old and new value.
+- New products get a 13-digit in-store barcode starting with 2 if none is typed.
+- "Tracked by IMEI" can't be switched once a product has stock.
+**Why:** The old system let stock change without a trail, and the owner couldn't tell why a
+number was wrong. Separate price permissions let an inventory officer manage products without
+being able to change what customers pay.
