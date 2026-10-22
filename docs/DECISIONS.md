@@ -269,3 +269,21 @@ it. One order still gets one receipt, whichever departments its items come from.
 only selling to do opens straight onto the Sell screen.
 **Why:** Asking "which floor is this device on today?" was an extra step that added nothing.
 Access is about the person, not the device.
+
+### D-034 · A back office with a sidebar, shaped like the jobs people do (2026-10-22)
+**Choice:** Every signed-in screen sits inside one layout: a sidebar on the left (a Menu button
+on phones), the screen on the right. The sidebar has 11 sections (Dashboard, Sell, Checkout,
+Sales, Products, Stock, Customers, Staff, Money, Reports, Settings) in place of the old system's
+11 sections and 60 links. Each person sees only the sections their role allows; sections still
+being built show as "Soon". People land on the dashboard if they can see it, otherwise on their
+first section (Sell, for a rep).
+- **Add staff** asks for name, phone, email, a first password, role, departments and (for
+  people who approve discounts) a discount limit. The old form asked for over 40 fields.
+- **Departments** are added, renamed or hidden in Settings and are usable straight away. A
+  department still holding stock can't be hidden.
+- **Logins** are created by a Supabase edge function (pos-add-staff), so the POS app still never
+  holds the server key. The function acts as the person adding staff, so the same permission
+  rules apply. Only the owner can add or change an owner, and nobody can deactivate themselves.
+**Why:** The owner wants to open the POS and see everything they can do, like the current
+system's dashboard and sidebar, but with Bumpa's simplicity: fewer, clearer sections and short
+forms.

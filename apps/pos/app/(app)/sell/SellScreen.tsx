@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { can, naira, type Me } from '@/lib/pos';
@@ -217,10 +216,8 @@ export default function SellScreen({ me }: { me: Me }) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-6xl flex-col gap-4 px-4 py-4">
       <header className="flex flex-wrap items-center gap-3">
-        <Link href="/" className="rounded-lg border border-line bg-panel px-3 py-2 font-medium">← Home</Link>
         <h1 className="text-xl font-bold">Sell</h1>
-        <span className="ml-auto text-sm text-ink-soft">{me.name}</span>
-        <button onClick={() => setCamera(true)} className="rounded-lg border border-line bg-panel px-3 py-2 font-medium">
+        <button onClick={() => setCamera(true)} className="ml-auto rounded-lg border border-line bg-panel px-3 py-2 font-medium">
           Scan with camera
         </button>
       </header>

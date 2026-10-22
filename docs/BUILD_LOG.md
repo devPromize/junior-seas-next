@@ -363,3 +363,34 @@ migration runs as a single transaction. That's why we run imports that way.
 **Worth showing**
 - Before/after screenshots: the "Which floor is this device on today?" home screen, and the
   rep landing straight on Sell.
+
+---
+
+## 2026-10-22 · Session 10: The back office takes shape
+
+**What we built**
+- **A sidebar and dashboard**, inspired by the old system's layout and by Bumpa's simplicity.
+  The old system has 60 menu links; ours has 11 sections, and each person only sees the ones
+  their role allows. The dashboard shows today's sales (after discounts), receipts, orders
+  waiting to be paid, discounts, sales by department, and the last 7 days.
+- **Staff:** a list (role, departments, last sign-in), plus add and edit. The form asks for 7
+  things instead of 40+. Choosing a role shows what that person will be able to do and any
+  warnings ("This person can take money and complete sales…").
+- **Departments in Settings:** add a new department (e.g. Electrical & Electronic Appliances)
+  in one step, rename one, or hide one once its stock has moved out.
+- **Creating logins safely:** a small server function makes the login, so the POS app itself
+  still never holds the master key.
+
+**Tests:** 16 new back-office tests, all passing (62 database tests in total). They include
+"a manager can't make anyone an owner", "the owner can't lock themselves out" and "a deactivated
+person can't sign in to the POS".
+
+**What we learned**
+- Looking at the old system as the owner sees it, rather than at its data, showed the real
+  brief: one place to land, and everything you can do in reach.
+- The old system's "Location" dropdown on its sales screen is where the floor picker came from.
+  Copying a screen copies its problems too.
+
+**Worth showing**
+- Side by side: the old system's Add User form (40+ fields) and ours (7).
+- The sidebar as an owner sees it and as a sales rep sees it.
