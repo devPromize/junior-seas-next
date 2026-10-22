@@ -36,3 +36,15 @@ body {
   outline: 3px solid var(--color-brand);
   outline-offset: 2px;
 }
+
+/* Receipts print on 80 mm paper with nothing else on the page. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+}

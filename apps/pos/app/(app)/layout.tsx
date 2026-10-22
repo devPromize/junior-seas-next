@@ -1,5 +1,6 @@
 import { getMe } from '@/lib/me';
 import { navFor } from '@/lib/nav';
+import { can } from '@/lib/pos';
 import { signOut } from '../actions';
 import Sidebar from './Sidebar';
 
@@ -25,8 +26,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const items = navFor(me).map(({ label, href }) => ({ label, href }));
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr]">
-      <Sidebar items={items} name={me.name} role={me.role} />
+    <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr] print:block">
+      <Sidebar items={items} name={me.name} role={me.role} showPin={can(me, 'sales.discount')} />
       <div className="min-w-0">{children}</div>
     </div>
   );

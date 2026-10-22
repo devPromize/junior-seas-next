@@ -7,7 +7,7 @@ export type NavItem = { label: string; href?: string; anyOf: string[] };
 export const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/', anyOf: ['reports.view', 'sales.view_all', 'sales.view_floor'] },
   { label: 'Sell', href: '/sell', anyOf: ['sales.create'] },
-  { label: 'Checkout', anyOf: ['sales.checkout'] },
+  { label: 'Checkout', href: '/checkout', anyOf: ['sales.checkout'] },
   { label: 'Sales', anyOf: ['sales.view_own', 'sales.view_floor', 'sales.view_all'] },
   { label: 'Products', anyOf: ['products.manage', 'prices.edit', 'prices.wholesale'] },
   { label: 'Stock', anyOf: ['stock.receive', 'stock.adjust', 'stock.transfer'] },

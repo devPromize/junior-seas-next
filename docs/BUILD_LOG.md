@@ -394,3 +394,36 @@ person can't sign in to the POS".
 **Worth showing**
 - Side by side: the old system's Add User form (40+ fields) and ours (7).
 - The sidebar as an owner sees it and as a sales rep sees it.
+
+---
+
+## 2026-10-22 · Session 11: Checkout and the receipt
+
+**What we built**
+- **Checkout:** the cashier's queue of orders waiting to be paid. It updates by itself every
+  few seconds, and each cashier only sees orders with items from their departments. Opening an
+  order shows the items, IMEIs, the rep's note and any discount promised on the floor.
+  - **Discount:** prefilled with what the rep promised; the cashier picks who authorised it.
+    Above the quick-discount limit (₦50,000), a manager types their PIN at the till.
+  - **Payment:** tap + Cash, + Transfer or + Card. Each one fills in what's left to pay, so a
+    split payment is two taps. Transfers and cards ask which account (Nombank, OPay). Complete
+    sale only lights up when the payments add up exactly.
+  - **Remove an item or cancel the order**, with a one-tap reason.
+- **The receipt:** one receipt per order, even when the items come from several departments.
+  It has the shop's name, address and phone numbers, the receipt number, customer, who sold it
+  and who took payment, every item with its IMEI, any discount, and each payment. It prints on
+  80 mm receipt paper, and **Send on WhatsApp** opens the shop's WhatsApp with the receipt
+  ready to send to the customer's number.
+- **My PIN:** managers set the PIN they use to approve large discounts.
+
+**Tests:** 9 new tests for the whole journey (a rep sells a phone and an accessory, the right
+cashier takes cash plus an OPay transfer, the receipt shows both items and both payments, the
+wrong cashier can't see or take the order, and an order can't be paid twice). All passing.
+
+**Before go-live**
+- Receipt numbers come from a counter that test runs also use up (tests roll back their sales
+  but not the counter). Reset it at cutover so real receipts start from JS-0000001.
+
+**Worth showing**
+- Screen recording: Sell on one screen, the order appearing in Checkout on another a few
+  seconds later, split payment, then the printed receipt.
