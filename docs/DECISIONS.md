@@ -403,3 +403,20 @@ they actually get done, and checked so they can't be done wrong.
 phone is a year old, a thank-you to best customers, a "we miss you" to lapsed ones. Those lists
 have to be one tap away and legally sendable. Phone numbers are personal data, so browsing and
 exporting are limited and logged.
+
+### D-040 · Merging duplicate products (2026-10-23)
+**Choice:** Products > Duplicates lists every name saved more than once. Merging keeps one copy
+and moves everything else onto it:
+- **Stock** moves through recorded stock movements ("Merged into…" / "Merged from copy…"), so the
+  stock ledger still explains every number.
+- **Phones, past sales and past purchases** are re-pointed to the kept product, so its history is
+  complete.
+- **Old barcodes keep working:** each retired copy's barcode becomes an alias of the kept
+  product, at the till and in search, so printed labels don't need replacing.
+- **Copies are retired, not deleted**, and every merge is logged (which copy, its old price).
+- **Same-price groups merge in one tap** into the copy most recently sold or bought. Groups whose
+  copies have different prices need the owner to choose the price. Merging can't be used to
+  change a price without "Change prices". A phone (IMEI-tracked) can't be merged with a non-phone.
+**Why:** With one model split across up to 29 records, no stock number or sales report for that
+model was right. Merging fixes the past. The duplicate-name guard (session 16 follow-up) stops
+it happening again.

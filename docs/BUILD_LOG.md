@@ -636,3 +636,35 @@ passing.
   any existing duplicate would have been refused. **How we found it:** thinking through what the
   product save actually sends, before testing. **Fix:** the check now runs only when a product is
   added, renamed or put back on sale. A test confirms a duplicate's price can still be changed.
+
+---
+
+## 2026-10-23 · Session 17: Merging duplicate products (D-040)
+
+**What we built**
+- **Products → Duplicates:** every product name saved more than once, each copy with its
+  barcode, price, stock, sales and when it last sold, and a suggested copy to keep.
+- **Merge:** one product per model. Stock, phones and history move onto it, and old barcodes
+  keep working, so no labels need reprinting.
+- **One tap for the easy ones:** groups where every copy has the same price.
+
+**Done for real:** the 124 same-price groups were merged: **212 duplicate copies retired**
+(3,879 → 3,667 products). Checked before and after: total stock, phones in stock and past sales
+lines all identical, and no stock left on any retired copy. 129 groups with different prices
+are waiting for the owner to choose each price.
+
+**What broke, and how we fixed it**
+- *The wrong copy was suggested.* **What happened:** for HAWK MEMORY CARD (8GB) the screen
+  suggested keeping the ₦2,000 copy last sold in August, not the one sold in October. **How we
+  found it:** looking at the first group on the screen before merging anything. **Fix:** "most
+  recently used" was also counting record edits (our own data clean-ups had touched many
+  records). It now counts only real sales and purchases.
+
+**Tests:** 7 tests run the real one-tap merge on the real catalogue and roll back. They check
+nothing is lost (stock, phones, sale lines), retired copies hold nothing, old barcodes find the
+kept product, the chosen price is applied and logged, phones can't merge with non-phones, and
+merging can't change a price without permission. All passing.
+
+**Worth showing**
+- Before and after: "TECNO SPARK 40 4+128GB" × 29 → one product with its true stock.
+- The verification table: stock 80,802 → 80,802, phones 537 → 537, products 3,879 → 3,667.

@@ -40,7 +40,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         <h1 className="text-2xl font-bold">Products</h1>
         <span className="text-ink-soft">{total.toLocaleString()} found</span>
         {options.can.manage && (
-          <Link href="/products/new" className="ml-auto rounded-lg bg-brand px-4 py-2.5 font-semibold text-white">Add product</Link>
+          <span className="ml-auto flex gap-2">
+            <Link href="/products/duplicates" className="rounded-lg border border-line bg-panel px-4 py-2.5 font-semibold">Duplicates</Link>
+            <Link href="/products/new" className="rounded-lg bg-brand px-4 py-2.5 font-semibold text-white">Add product</Link>
+          </span>
         )}
       </header>
 

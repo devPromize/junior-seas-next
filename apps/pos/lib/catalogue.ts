@@ -35,6 +35,7 @@ type Raw = {
   items: [number, string, string, number, number | null, boolean, string, string][];
   stock: [number, number, number][];
   units: [string, number, number, 'in_stock' | 'held', string[] | null][];
+  aliases?: [string, number][];   // old barcodes of merged duplicate products -> the product kept
 };
 
 export function buildCatalogue(raw: Raw): Catalogue {
@@ -49,6 +50,12 @@ export function buildCatalogue(raw: Raw): Catalogue {
   }
 
   const stock = new Map<string, number>();
+  // A merged duplicate's old barcode finds the product that was kept.
+  for (const [code, itemId] of raw.aliases ?? []) {
+    const item = items.get(itemId);
+    if (item && !bySku.has(code.trim())) bySku.set(code.trim(), item);
+  }
+
   for (const [itemId, departmentId, qty] of raw.stock) stock.set(`${itemId}:${departmentId}`, qty);
 
   const byCode = new Map<string, Unit>();
