@@ -4,7 +4,7 @@ Everything we've learned about how the shop's old point-of-sale system was reall
 gathered in one place. Each finding came from the data or from walking through its screens, and
 each one shaped a rule in the new POS. Written to be shared: no vendor names and no takings.
 
-Last updated: 23 October 2026 (19 findings).
+Last updated: 23 October 2026 (20 findings).
 
 ---
 
@@ -100,3 +100,13 @@ Last updated: 23 October 2026 (19 findings).
 
 17. **About 60 menu links in 11 sections.** Some were never used (purchase returns: zero, ever).
     → *New POS:* 11 sections, and each person sees only what their role allows.
+
+## More data quality
+
+20. **The same product, saved over and over.** 253 product names exist more than once, covering
+    1,242 product records. One phone model exists 29 times. It looks like a new product was
+    created with each delivery instead of picking the existing one, so a model's stock and sales
+    are split across many copies and no single record shows the truth.
+    → *New POS:* a product can't be created with a name that already exists, and while you type a
+    new product's name it shows the existing ones with "Use this". The existing copies need
+    merging (planned).

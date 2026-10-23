@@ -7,14 +7,15 @@ import { naira, type PaymentAccount } from '@/lib/pos';
 import { nairaToKobo, type ProductOptions, type ProductRow } from '@/lib/products';
 import ProductPicker from '@/components/ProductPicker';
 import NewProductInline from '@/components/NewProductInline';
+import PhoneScanner from '@/components/PhoneScanner';
 import SupplierPicker, { type Supplier } from '@/components/SupplierPicker';
 import DocumentUploader, { type UploadedDoc } from '@/components/DocumentUploader';
 
-type Line = { key: number; product: ProductRow; qty: string; cost: string; price: string; codes: string[]; scan: string };
+type Line = { key: number; product: ProductRow; qty: string; cost: string; price: string; wholesale: string; codes: string[] };
 
 // Record a purchase: supplier, department, the items (phones scanned by IMEI), their cost, and
-// optionally a new selling price, as staff did on the old system. Photos or a PDF of the
-// supplier's receipt can be attached.
+// optionally new selling and wholesale prices, as staff did on the old system. Photos or a PDF
+// of the supplier's receipt can be attached.
 export default function PurchaseForm({
   options, accounts, canPay,
 }: { options: ProductOptions; accounts: PaymentAccount[]; canPay: boolean }) {
@@ -37,16 +38,9 @@ export default function PurchaseForm({
   const pieces = lines.reduce((s, l) => s + qtyOf(l), 0);
   const totalCost = lines.reduce((s, l) => s + qtyOf(l) * (nairaToKobo(l.cost) ?? 0), 0);
 
-  function add(p: ProductRow, cost = '') {
+  function add(p: ProductRow, cost = '', wholesale = '') {
     if (lines.some((l) => l.product.id === p.id)) return;
-    setLines((ls) => [...ls, { key: Date.now(), product: p, qty: p.tracks_imei ? '' : '1', cost, price: '', codes: [], scan: '' }]);
-  }
-  function addCode(l: Line) {
-    const code = l.scan.trim();
-    if (!code) return;
-    if (lines.some((x) => x.codes.includes(code))) return setError(`${code} is already in this purchase.`);
-    setError(null);
-    update(l.key, { codes: [...l.codes, code], scan: '' });
+    setLines((ls) => [...ls, { key: Date.now(), product: p, qty: p.tracks_imei ? '' : '1', cost, price: '', wholesale, codes: [] }]);
   }
 
   async function save() {
@@ -62,6 +56,7 @@ export default function PurchaseForm({
         item_id: l.product.id,
         unit_cost_kobo: nairaToKobo(l.cost),
         new_price_kobo: options.can.prices ? nairaToKobo(l.price) : null,
+        new_wholesale_kobo: options.can.wholesale ? nairaToKobo(l.wholesale) : null,
         ...(l.product.tracks_imei ? { codes: l.codes } : { qty: Number(l.qty) }),
       })),
     });
@@ -123,7 +118,8 @@ export default function PurchaseForm({
           onCreate={options.can.manage ? (typed) => setCreating(typed) : undefined} />
         {creating != null && (
           <NewProductInline typed={creating} options={options} onCancel={() => setCreating(null)}
-            onCreated={(p, cost) => { add(p, cost); setCreating(null); }} />
+            onCreated={(p, cost) => { add(p, cost); setCreating(null); }}
+            onUseExisting={(p) => { add(p); setCreating(null); }} />
         )}
         {lines.length === 0 && <p className="text-sm text-ink-soft">Add the products on the supplier’s receipt.</p>}
         <ul className="flex flex-col divide-y divide-line">
@@ -162,21 +158,19 @@ export default function PurchaseForm({
                       placeholder="Keep" className={`${field} tabular w-28`} />
                   </label>
                 )}
+                {options.can.wholesale && (
+                  <label className="flex items-center gap-2 text-sm">
+                    Wholesale, ₦
+                    <input inputMode="decimal" value={l.wholesale} onChange={(e) => update(l.key, { wholesale: e.target.value })}
+                      placeholder={l.product.wholesale_price_kobo != null ? String(l.product.wholesale_price_kobo / 100) : 'None'}
+                      className={`${field} tabular w-28`} />
+                  </label>
+                )}
                 <button onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} className="text-sm text-bad underline">Remove</button>
               </div>
               {l.product.tracks_imei && (
-                <div className="flex flex-col gap-2 rounded-lg bg-paper p-3">
-                  <input value={l.scan} onChange={(e) => update(l.key, { scan: e.target.value })}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCode(l); } }}
-                    placeholder="Scan each IMEI or serial, then Enter. Dual-SIM: IMEI 1 / IMEI 2" className={`${field} font-mono`} />
-                  <p className="text-sm font-medium">{l.codes.length} scanned</p>
-                  <div className="flex flex-wrap gap-2">
-                    {l.codes.map((c) => (
-                      <button key={c} onClick={() => update(l.key, { codes: l.codes.filter((x) => x !== c) })} title="Remove"
-                        className="rounded-full border border-line bg-panel px-3 py-1 font-mono text-xs">{c} ×</button>
-                    ))}
-                  </div>
-                </div>
+                <PhoneScanner codes={l.codes} onChange={(codes) => update(l.key, { codes })}
+                  takenElsewhere={(code) => lines.some((x) => x.key !== l.key && x.codes.some((c) => c.split('/').includes(code)))} />
               )}
             </li>
           ))}

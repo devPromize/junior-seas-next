@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { naira } from '@/lib/pos';
 import { nairaToKobo, type ProductOptions, type ProductRow } from '@/lib/products';
@@ -9,17 +9,31 @@ import { nairaToKobo, type ProductOptions, type ProductRow } from '@/lib/product
 // to sell it: name, category, brand, phone or not, and the selling price. Everything else
 // can be filled in later on the product's page. The cost goes on the purchase line.
 export default function NewProductInline({
-  typed, options, onCreated, onCancel,
+  typed, options, onCreated, onUseExisting, onCancel,
 }: {
   typed: string; options: ProductOptions;
-  onCreated: (product: ProductRow, cost: string) => void; onCancel: () => void;
+  onCreated: (product: ProductRow, cost: string) => void; onUseExisting: (product: ProductRow) => void; onCancel: () => void;
 }) {
   const [name, setName] = useState(typed.toUpperCase());
+  const [similar, setSimilar] = useState<ProductRow[]>([]);
+
+  // The old system ended up with one phone model saved up to 29 times, because new products
+  // were created instead of picking the existing one. Show what already exists while typing.
+  useEffect(() => {
+    const words = name.trim().split(/\s+/).slice(0, 3).join(' ');
+    if (words.length < 3) return setSimilar([]);
+    const t = setTimeout(async () => {
+      const { data } = await createClient().rpc('pos_products', { p_search: words, p_limit: 5 });
+      setSimilar((data?.rows ?? []) as ProductRow[]);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [name]);
   const [category, setCategory] = useState('');
   const [brand, setBrand] = useState('');
   const [tracksImei, setTracksImei] = useState(false);
   const [cost, setCost] = useState('');
   const [price, setPrice] = useState('');
+  const [wholesale, setWholesale] = useState('');
   const [barcode, setBarcode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,12 +51,13 @@ export default function NewProductInline({
     const br = options.brands.find((b) => b.name.toLowerCase() === brand.trim().toLowerCase());
     if (br) fields.brand_id = br.id; else if (brand.trim()) fields.brand_name = brand;
     if (options.can.costs && costKobo) fields.cost_kobo = costKobo;
+    if (options.can.wholesale && nairaToKobo(wholesale)) fields.wholesale_price_kobo = nairaToKobo(wholesale);
     const { data, error } = await createClient().rpc('pos_save_product', { p_id: null, p_fields: fields });
     setBusy(false);
     if (error) return setError(error.message);
     onCreated({
       id: data.id, sku: data.sku, name: name.trim().toUpperCase(), category: category || null, brand: brand || null,
-      price_kobo: priceKobo, wholesale_price_kobo: null, cost_kobo: null, tracks_imei: tracksImei,
+      price_kobo: priceKobo, wholesale_price_kobo: nairaToKobo(wholesale), cost_kobo: null, tracks_imei: tracksImei,
       is_active: true, show_online: false, stock: 0, by_department: {},
     }, cost);
   }
@@ -56,6 +71,18 @@ export default function NewProductInline({
         <label className={`${label} sm:col-span-2`}>Name *
           <input autoFocus value={name} onChange={(e) => setName(e.target.value)} className={field} />
         </label>
+        {similar.length > 0 && (
+          <div className="flex flex-col gap-1 rounded-lg border border-warn bg-warn-soft p-3 text-sm sm:col-span-2">
+            <p className="font-semibold text-warn">Already in the system. Is it one of these?</p>
+            {similar.map((p) => (
+              <button key={p.id} type="button" onClick={() => onUseExisting(p)}
+                className="flex justify-between gap-3 rounded-md bg-panel px-3 py-2 text-left hover:bg-paper">
+                <span>{p.name} <span className="text-xs text-ink-soft">· {p.sku} · {p.stock} in stock</span></span>
+                <span className="font-semibold text-brand">Use this</span>
+              </button>
+            ))}
+          </div>
+        )}
         <label className={label}>Category
           <input list="np-categories" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Choose or type a new one" className={field} />
           <datalist id="np-categories">{options.categories.map((c) => <option key={c.id} value={c.name} />)}</datalist>
@@ -75,6 +102,11 @@ export default function NewProductInline({
             </span>
           )}
         </label>
+        {options.can.wholesale && (
+          <label className={label}>Wholesale price, ₦
+            <input inputMode="decimal" value={wholesale} onChange={(e) => setWholesale(e.target.value)} placeholder="Optional" className={`${field} tabular`} />
+          </label>
+        )}
         <label className={label}>Barcode on the box
           <input value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="Scan it, or leave empty" className={field} />
         </label>

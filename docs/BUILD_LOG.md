@@ -616,3 +616,23 @@ passing.
   product's page.
 - Each purchase line now shows the margin as soon as a cost is typed ("margin 32%", or "below
   cost!" in red), like the old form's price × margin, but worked out for staff.
+
+**Follow-up: receiving phones properly, wholesale prices, and no more duplicate products**
+- *Twenty phones in one delivery.* Each phone line now has "How many in this delivery?" with
+  progress ("12 of 20 scanned, 8 to go"), a **Dual SIM** switch that pairs scans (a dual-SIM box
+  has two IMEI barcodes, so 40 scans make 20 phones; before, it would have made 40), "Paste a
+  list" for a supplier's IMEI list, and an **IMEI check-digit test** that turns a mis-scanned or
+  mistyped IMEI red before it's saved.
+- *Wholesale price on purchases* (and on the new-product form), for people allowed to set
+  wholesale prices. Kept below the selling price, logged.
+- *Duplicate products.* While testing we found 253 product names saved more than once (one phone
+  model 29 times, finding 20). The database now refuses a new product with an existing name, and
+  the new-product form shows similar existing products with "Use this". The guard only checks when
+  a name changes, so the existing duplicates can still be edited until we merge them.
+
+**What broke**
+- *The duplicate-name guard would have frozen 1,242 products.* **What happened:** the first version
+  checked on every save of a product, and every save rewrites the name, so editing the price of
+  any existing duplicate would have been refused. **How we found it:** thinking through what the
+  product save actually sends, before testing. **Fix:** the check now runs only when a product is
+  added, renamed or put back on sale. A test confirms a duplicate's price can still be changed.
