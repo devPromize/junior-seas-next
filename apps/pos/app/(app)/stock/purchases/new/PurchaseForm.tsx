@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { naira, type PaymentAccount } from '@/lib/pos';
 import { nairaToKobo, type ProductOptions, type ProductRow } from '@/lib/products';
 import ProductPicker from '@/components/ProductPicker';
+import NewProductInline from '@/components/NewProductInline';
 import SupplierPicker, { type Supplier } from '@/components/SupplierPicker';
 import DocumentUploader, { type UploadedDoc } from '@/components/DocumentUploader';
 
@@ -27,6 +28,7 @@ export default function PurchaseForm({
   const [note, setNote] = useState('');
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
   const [lines, setLines] = useState<Line[]>([]);
+  const [creating, setCreating] = useState<string | null>(null);   // what was typed, for a brand-new product
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,9 +37,9 @@ export default function PurchaseForm({
   const pieces = lines.reduce((s, l) => s + qtyOf(l), 0);
   const totalCost = lines.reduce((s, l) => s + qtyOf(l) * (nairaToKobo(l.cost) ?? 0), 0);
 
-  function add(p: ProductRow) {
+  function add(p: ProductRow, cost = '') {
     if (lines.some((l) => l.product.id === p.id)) return;
-    setLines((ls) => [...ls, { key: Date.now(), product: p, qty: p.tracks_imei ? '' : '1', cost: '', price: '', codes: [], scan: '' }]);
+    setLines((ls) => [...ls, { key: Date.now(), product: p, qty: p.tracks_imei ? '' : '1', cost, price: '', codes: [], scan: '' }]);
   }
   function addCode(l: Line) {
     const code = l.scan.trim();
@@ -117,7 +119,12 @@ export default function PurchaseForm({
       </section>
 
       <section className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
-        <ProductPicker onPick={add} departmentId={departmentId} placeholder="Search or scan a product to add" />
+        <ProductPicker onPick={(p) => add(p)} departmentId={departmentId} placeholder="Search or scan a product to add"
+          onCreate={options.can.manage ? (typed) => setCreating(typed) : undefined} />
+        {creating != null && (
+          <NewProductInline typed={creating} options={options} onCancel={() => setCreating(null)}
+            onCreated={(p, cost) => { add(p, cost); setCreating(null); }} />
+        )}
         {lines.length === 0 && <p className="text-sm text-ink-soft">Add the products on the supplier’s receipt.</p>}
         <ul className="flex flex-col divide-y divide-line">
           {lines.map((l) => (
@@ -125,7 +132,16 @@ export default function PurchaseForm({
               <div className="flex flex-wrap items-center gap-3">
                 <span className="min-w-48 flex-1 font-medium">
                   {l.product.name}
-                  <span className="block text-xs font-normal text-ink-soft">selling at {naira(l.product.price_kobo)}</span>
+                  <span className="block text-xs font-normal text-ink-soft">
+                    selling at {naira(nairaToKobo(l.price) ?? l.product.price_kobo)}
+                    {(() => {
+                      const cost = nairaToKobo(l.cost) ?? 0;
+                      const sell = nairaToKobo(l.price) ?? l.product.price_kobo;
+                      if (!cost || !sell) return null;
+                      const m = Math.round(((sell - cost) / sell) * 100);
+                      return <span className={m < 0 ? 'font-semibold text-bad' : ''}> · {m < 0 ? 'below cost!' : `margin ${m}%`}</span>;
+                    })()}
+                  </span>
                 </span>
                 {!l.product.tracks_imei && (
                   <label className="flex items-center gap-2 text-sm">

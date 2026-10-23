@@ -606,3 +606,13 @@ passing.
 **Worth showing**
 - The "Due for an upgrade" list: a real GTM use of POS data.
 - A customer page with "Phones they own: … bought 14 months ago".
+
+**Follow-up: new products from inside a purchase**
+- When a delivery includes something the shop has never stocked, searching for it on a new
+  purchase now offers "+ Add '…' as a new product". A short form opens in place (name, category,
+  brand, cost, selling price, barcode, phone or not) and the product goes straight onto the
+  purchase. The old system did this with a pop-up of about 20 fields (weight, tax, "family", a
+  rich-text description…). Ours asks for the 7 that matter to sell it; the rest can wait for the
+  product's page.
+- Each purchase line now shows the margin as soon as a cost is typed ("margin 32%", or "below
+  cost!" in red), like the old form's price × margin, but worked out for staff.
