@@ -11,7 +11,7 @@ export const NAV: NavItem[] = [
   { label: 'Sales', href: '/sales', anyOf: ['sales.view_own', 'sales.view_floor', 'sales.view_all', 'sales.refund'] },
   { label: 'Products', href: '/products', anyOf: ['products.manage', 'prices.edit', 'prices.wholesale', 'stock.adjust', 'costs.view'] },
   { label: 'Stock', href: '/stock', anyOf: ['stock.receive', 'stock.adjust', 'stock.transfer', 'costs.view'] },
-  { label: 'Customers', anyOf: ['sales.view_floor', 'sales.view_all', 'customers.export'] },
+  { label: 'Customers', href: '/customers', anyOf: ['customers.manage', 'customers.export'] },
   { label: 'Staff', href: '/staff', anyOf: ['staff.manage'] },
   { label: 'Money', href: '/money', anyOf: ['money.view', 'suppliers.pay', 'expenses.manage', 'till.manage', 'settings.manage'] },
   { label: 'Reports', anyOf: ['reports.view'] },

@@ -572,3 +572,37 @@ a note when short and alerts the owner; overview; alerts; accounts). All passing
 **Worth showing**
 - The cash-up screen: "Should be in the drawer ₦…", type the count, "Balanced."
 - A supplier bill with "Record payment" open: amount, date, transfer from OPay, "Paid in full".
+
+---
+
+## 2026-10-23 · Session 16: Customers (D-039)
+
+**What we built**
+- **Customers:** groups you can act on, such as "Due for an upgrade" (129 customers whose last phone
+  is over a year old), "Haven't been back", "Best customers" and "Agreed to offers".
+- **A page per customer:** spend, visits, the phones they own with IMEIs and how long ago they
+  bought them, every purchase, staff notes ("wants the next iPhone"), and Call / WhatsApp buttons.
+- **Consent, done properly:** three separate agreements, each change timestamped and logged.
+- **Export for CRM:** one tap gives a HubSpot-ready CSV of the group you're looking at, by
+  default only people who agreed to offers. Every export is logged.
+- **Add customer** for people who enquire before they buy.
+
+**What we learned from the old data**
+- Of 575 named customers, none had ever given marketing consent, because the old system never
+  asked (finding 19). The customer list is a real asset, but it can't be marketed to until
+  consent is collected, sale by sale.
+
+**What broke**
+- The local development server, running since the day before, started crashing on every page
+  with an ID in its address (customer, product, sale pages), including ones that had worked an
+  hour earlier. Not a code problem: a restart fixes it.
+
+**Tests:** 10 new tests (a rep captures a customer at a sale; cashiers can't browse customers;
+found by phone in any format with the phone they bought; duplicate numbers refused; consent
+changes timestamped and logged; notes; business and upgrade-due groups; managers can't export by
+default; the owner's export has HubSpot columns, only consented customers, and is logged). All
+passing.
+
+**Worth showing**
+- The "Due for an upgrade" list: a real GTM use of POS data.
+- A customer page with "Phones they own: … bought 14 months ago".

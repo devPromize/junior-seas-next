@@ -381,3 +381,25 @@ looked after.
 **Why:** In the old system staff never learned how to mark a supplier paid, so every purchase
 this year showed as "due", and expenses were almost never recorded. Both need to be so simple
 they actually get done, and checked so they can't be done wrong.
+
+### D-039 · Customers, ready for a CRM (2026-10-23)
+**Choice:**
+- **Customer list with ready-made groups:** Everyone · Bought a phone · Due for an upgrade (last
+  phone over 12 months ago) · Haven't been back (90 days) · Best customers (by spend) · Agreed to
+  offers · Businesses. Search by name, phone (any format), email or company.
+- **Each customer's page:** what they've spent after returns, visits, first and last visit, the
+  phones they own (IMEI, when bought, how long ago), every purchase, staff notes, and one-tap Call
+  and WhatsApp.
+- **Details and consent:** contact details, where they heard about us, company and industry, and
+  three separate consents (receipts and warranty messages; offers; online ads). Consent changes
+  are timestamped and logged.
+- **Export for CRM:** a CSV with HubSpot's column names (First Name, Last Name, Phone Number,
+  Email, Company Name, Lead Source, consents, purchases, spend, phones bought, last phone
+  purchase). By default only people who agreed to offers. Needs "Export customer lists", which
+  managers don't have by default. Every export is logged: who, which group, how many.
+- New permission "See and edit customers" (Manager by default). Cashiers and reps still capture
+  customers at a sale but can't browse the whole list.
+**Why:** The point of capturing customers is to bring them back: upgrade offers to people whose
+phone is a year old, a thank-you to best customers, a "we miss you" to lapsed ones. Those lists
+have to be one tap away and legally sendable. Phone numbers are personal data, so browsing and
+exporting are limited and logged.

@@ -4,7 +4,7 @@ Everything we've learned about how the shop's old point-of-sale system was reall
 gathered in one place. Each finding came from the data or from walking through its screens, and
 each one shaped a rule in the new POS. Written to be shared: no vendor names and no takings.
 
-Last updated: 23 October 2026 (18 findings).
+Last updated: 23 October 2026 (19 findings).
 
 ---
 
@@ -61,6 +61,12 @@ Last updated: 23 October 2026 (18 findings).
    skipped it.
    → *New POS:* two fields up front (phone and name), and a "Customer declined" button, so
    skipping is visible per staff member instead of silent.
+
+19. **No customer had ever agreed to marketing.** None of the 575 named customers had a
+    recorded consent, because the old system never asked. Under Nigeria's Data Protection Act,
+    that means none of them can be sent promotions.
+    → *New POS:* every sale asks, consent changes are timestamped and logged, and exports for a
+    CRM include only people who agreed unless the owner deliberately chooses otherwise.
 
 ## Data quality
 
