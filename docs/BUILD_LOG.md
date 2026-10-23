@@ -462,3 +462,30 @@ every price change is logged from → to.
 **Worth showing**
 - A phone's product page: 30 IMEIs, each with its department and cost.
 - Receiving a delivery with a barcode scanner: scan, scan, scan, "Receive 3 pieces".
+
+---
+
+## 2026-10-23 · Session 13: Purchases (D-036)
+
+**What we built**
+- **Purchases**, named and numbered the way staff already know them (next: PO2026/0347):
+  pick the supplier from a list or add a new one, choose the department, add products (scan
+  each phone's IMEI), cost, and optionally a new selling price, as on the old form.
+- **The old system's purchase history**: 344 purchases and 2,262 purchased items since April
+  2025, each linked to its supplier and product, searchable by PO number, supplier, invoice
+  number or product. Totals match the old system to the kobo.
+- **Supplier's receipt on file**: take a photo of each page with the phone (shrunk to ~300 KB
+  before upload) or attach a PDF, when recording a purchase or later on any purchase,
+  old ones included.
+
+**What we learned from the old data**
+- A quarter of the "purchases" (82) were really stock coming from our own other branches. In the
+  new POS that's a stock move, so reports stop counting it as buying.
+- Supplier payments stopped being recorded at the start of 2026. Worth deciding whether to
+  track what we owe suppliers (it fits naturally in Money).
+
+**Tests:** 9 new purchase tests and the 18 stock tests re-run against the new purchase entry
+point: 27 passing.
+
+**Coming next for purchases:** AI reading the receipt photo and filling the purchase in, for a
+person to check before saving. It needs an AI key.

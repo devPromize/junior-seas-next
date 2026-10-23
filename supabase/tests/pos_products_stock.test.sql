@@ -71,17 +71,17 @@ begin
   end;
 
   -- 7. receive a delivery: 12 chargers into Accessories, from a new supplier
-  v_res := public.pos_receive_stock(v_acc, jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 12, 'unit_cost_kobo', 900000)),
-                                    'Test Supplier Ltd', 'INV-001');
+  v_res := public.pos_record_purchase(v_acc, jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 12, 'unit_cost_kobo', 900000)),
+                                      (public.pos_save_supplier(null, 'Test Supplier Ltd')->>'id')::bigint, 'INV-001');
   r := r || case when (select quantity from pos.stock_levels where item_id = v_item and floor_id = v_acc) = 12
                   and (v_res->>'total_cost_kobo')::bigint = 12 * 900000
-                  and exists (select 1 from pos.suppliers where name = 'Test Supplier Ltd')
+                  and exists (select 1 from pos.suppliers where name = 'TEST SUPPLIER LTD')
                  then 'PASS 7  12 received into Accessories, ₦108,000 delivery recorded' else 'FAIL 7  ' || v_res::text end;
 
   -- 8. receive phones: one dual-SIM (two IMEIs) and one laptop-style serial number
   v_res := public.pos_save_product(null, jsonb_build_object('name', 'test phone 128gb', 'price_kobo', 25000000, 'tracks_imei', true));
   v_phone_item := (v_res->>'id')::bigint;
-  v_res := public.pos_receive_stock(v_phones, jsonb_build_array(jsonb_build_object('item_id', v_phone_item, 'unit_cost_kobo', 20000000,
+  v_res := public.pos_record_purchase(v_phones, jsonb_build_array(jsonb_build_object('item_id', v_phone_item, 'unit_cost_kobo', 20000000,
              'codes', jsonb_build_array(v_imei1 || '/' || v_imei2, v_serial))));
   r := r || case when (v_res->>'phones')::int = 2
                   and (select count(*) from pos.phone_units where item_id = v_phone_item and status = 'in_stock') = 2
@@ -93,7 +93,7 @@ begin
 
   -- 9. the same IMEI can't come in twice
   begin
-    perform public.pos_receive_stock(v_phones, jsonb_build_array(jsonb_build_object('item_id', v_phone_item, 'codes', jsonb_build_array(v_imei1))));
+    perform public.pos_record_purchase(v_phones, jsonb_build_array(jsonb_build_object('item_id', v_phone_item, 'codes', jsonb_build_array(v_imei1))));
     r := r || 'FAIL 9  duplicate IMEI accepted';
   exception when others then
     r := r || case when sqlerrm like '% is already in the system: TEST PHONE 128GB (in stock).' then 'PASS 9  ' || sqlerrm else 'FAIL 9  ' || sqlerrm end;
@@ -160,7 +160,7 @@ begin
   -- 18. an inventory officer can't receive into a department they don't have
   perform set_config('request.jwt.claims', json_build_object('sub', v_inv, 'role', 'authenticated')::text, true);
   begin
-    perform public.pos_receive_stock((select id from pos.floors where code = 'spare_parts'),
+    perform public.pos_record_purchase((select id from pos.floors where code = 'spare_parts'),
                                      jsonb_build_array(jsonb_build_object('item_id', v_item, 'qty', 1)));
     r := r || 'FAIL 18 received into a department without access';
   exception when others then

@@ -1,4 +1,4 @@
-// Shapes returned by the products and stock entry points (public.pos_product*, pos_receive_stock…).
+// Shapes returned by the products and stock entry points (public.pos_product*, pos_record_purchase…).
 
 export type ProductRow = {
   id: number;
@@ -20,7 +20,7 @@ export type ProductOptions = {
   categories: { id: number; name: string; warranty_days: number | null }[];
   brands: { id: number; name: string }[];
   departments: { id: number; name: string }[];
-  suppliers: string[];
+  suppliers: { id: number; name: string }[];   // most recently used first
   can: { manage: boolean; prices: boolean; wholesale: boolean; costs: boolean; receive: boolean; move: boolean; adjust: boolean };
 };
 

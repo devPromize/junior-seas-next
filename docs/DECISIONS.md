@@ -307,3 +307,28 @@ forms.
 **Why:** The old system let stock change without a trail, and the owner couldn't tell why a
 number was wrong. Separate price permissions let an inventory officer manage products without
 being able to change what customers pay.
+
+### D-036 · Purchases, with their history and the supplier's receipt (2026-10-23)
+**Choice:**
+- "Receive a delivery" is called **Purchases**, the word staff already use, and lives inside
+  Stock (tabs: Purchases · Move stock). Purchase numbers carry on from the old system:
+  the next one is PO2026/0347.
+- Suppliers are picked from a list (most recently used first) or added on the spot. Names that
+  differ only in punctuation, spacing or "LTD" count as the same supplier, so duplicates like
+  "GODSWILL COMM LTD" / "GOD'SWILL COMM" can't come back.
+- The old system's 344 purchases (2,262 items, April 2025 to October 2026) and its suppliers
+  (62, merged to 55) are brought over as history. They don't change stock, which already came
+  over as opening stock. Every purchase total matches its items to the kobo.
+- As on the old form, a new selling price can be set while recording the purchase (needs
+  "Change prices"; logged).
+- **Receipts:** attach photos (one per page) or a PDF, before or after saving. Photos are shrunk
+  on the phone to about 300 KB and kept as images rather than turned into PDFs: they're smaller,
+  open instantly, and are what an AI reader needs. Stored privately; only people who handle
+  purchases can open them.
+- **Next, with an AI key:** read the receipt photo and fill the purchase in, for a person to
+  check every line before saving.
+**Why:** Staff know "Purchases" and the PO numbers. Picking suppliers from a list keeps
+reports clean. Receipts on file settle disputes with suppliers, and set up AI entry.
+**Found in the old data:** 82 of the 344 "purchases" are from the shop's own branches (JUNIOR
+SEAS MBARI 59, 12 TETLOW 23): stock moving between our own stores, recorded as buying. And
+supplier payments stopped being recorded in early 2026 (₦210M shows as "due").
