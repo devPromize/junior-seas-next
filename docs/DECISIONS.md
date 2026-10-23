@@ -332,3 +332,23 @@ reports clean. Receipts on file settle disputes with suppliers, and set up AI en
 **Found in the old data:** 82 of the 344 "purchases" are from the shop's own branches (JUNIOR
 SEAS MBARI 59, 12 TETLOW 23): stock moving between our own stores, recorded as buying. And
 supplier payments stopped being recorded in early 2026 (₦210M shows as "due").
+
+### D-037 · Sales and returns, with 18 months of history (2026-10-23)
+**Choice:**
+- The old system's 33,347 sales come over as history, with their items, payments, returns and
+  named customers (575), without touching stock. Old receipt numbers are kept, so a customer's
+  old receipt can be found by its number.
+- 3,350 of those "sales" were stock sent to our own branch. They're flagged as branch transfers
+  and left out of the sales list, the dashboard and reports.
+- **Who sees which sales:** reps see their own, cashiers and managers see sales with items from
+  their departments, and "See sales in every department" sees all.
+- **Find a sale** by receipt number, customer name or phone, product, or a phone's IMEI.
+  Searching an IMEI also shows the phone's story: when it came in, from which supplier, and
+  when, to whom and for how much it was sold.
+- **Returns:** pick the items and how many, whether each goes back on the shelf or is faulty,
+  and why. The refund is worked out from what the customer actually paid (after discounts), can
+  be lowered (exchanges, repairs), and can never be more than what's left unrefunded. Sales from
+  the old system can be returned too. Needs "Refund or return a paid sale".
+**Why:** Returns are the most sensitive thing at a till. The refund amount comes from the data,
+not from someone's memory. History means a customer who bought before the switch is still
+looked after.

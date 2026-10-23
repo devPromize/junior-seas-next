@@ -489,3 +489,46 @@ point: 27 passing.
 
 **Coming next for purchases:** AI reading the receipt photo and filling the purchase in, for a
 person to check before saving. It needs an AI key.
+
+---
+
+## 2026-10-23 · Session 14: Sales and returns, and 18 months of history (D-037)
+
+**What we built**
+- **Sales:** every sale, newest first, for the last 7 days by default (Today / 30 days / All
+  time), with the count and value after returns. Find a sale by receipt number, customer name
+  or phone, product, or IMEI. Old-system sales keep their old receipt numbers.
+- **Phone lookup:** search an IMEI and see the phone's story: what it is, where it is now, when
+  it came in and from whom, and when, to whom and for how much it was sold.
+- **Each sale's page:** items, IMEIs, discount, how it was paid, returns so far, and Print or
+  send the receipt again.
+- **Returns:** tick the items, choose "Back in stock" or "Faulty", give a reason (one tap for
+  the common ones), and the refund fills itself in from what the customer actually paid.
+- **History:** 33,347 old sales, 42,574 items, 30,797 payments, 487 returns and 575 customers
+  brought over. Returning customers are now recognised at the till from their old purchases too.
+
+**What broke, and how we fixed it**
+- *The sales list was slow.* **What happened:** with 30,000 old sales, the list took about 2
+  seconds. **How we found it:** timing it as the owner before building the screen. **Fix:** the
+  list was working out refunds and cashier names for every matching sale, not just the 50 on
+  screen. Moved that work to the page being shown and added indexes: now 0.02 to 0.2 seconds.
+- *Old receipts would have been open to anyone.* **What happened:** the receipt check asked "did
+  you sell this?" and old sales have no seller on record; in SQL, "nobody" compared with "you"
+  isn't "different", it's unknown, and the check let it through. **How we found it:** reading the
+  check again while importing sales with no seller. **Fix:** the check now uses the same "who
+  can see which sales" rule as everything else, and treats an empty seller as not you.
+
+**What we learned from the old data** (all in [OLD_SYSTEM_FINDINGS.md](OLD_SYSTEM_FINDINGS.md))
+- About 1 in 10 "sales" were stock sent to our own branch, under seven different contact names.
+- 263 real customer sales were left unpaid or part-paid with nothing following them up.
+- No product had a warranty period set.
+
+**Tests:** 10 new tests for the whole journey (sell a phone and an accessory, find it by
+receipt number and IMEI, a cashier can't refund, a manager returns one accessory into stock
+and the phone as faulty, can't refund more than paid, an old-system sale returned, a branch
+transfer refused). All passing.
+
+**Worth showing**
+- The phone lookup: type an IMEI, see the phone's whole story in one box.
+- A return: tick, "Faulty", "Return and refund ₦7,000".
+- The findings list itself makes a good post: "17 things we learned from 18 months of data".

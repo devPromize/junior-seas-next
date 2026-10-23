@@ -8,7 +8,7 @@ export const NAV: NavItem[] = [
   { label: 'Dashboard', href: '/', anyOf: ['reports.view', 'sales.view_all', 'sales.view_floor'] },
   { label: 'Sell', href: '/sell', anyOf: ['sales.create'] },
   { label: 'Checkout', href: '/checkout', anyOf: ['sales.checkout'] },
-  { label: 'Sales', anyOf: ['sales.view_own', 'sales.view_floor', 'sales.view_all'] },
+  { label: 'Sales', href: '/sales', anyOf: ['sales.view_own', 'sales.view_floor', 'sales.view_all', 'sales.refund'] },
   { label: 'Products', href: '/products', anyOf: ['products.manage', 'prices.edit', 'prices.wholesale', 'stock.adjust', 'costs.view'] },
   { label: 'Stock', href: '/stock', anyOf: ['stock.receive', 'stock.adjust', 'stock.transfer', 'costs.view'] },
   { label: 'Customers', anyOf: ['sales.view_floor', 'sales.view_all', 'customers.export'] },
