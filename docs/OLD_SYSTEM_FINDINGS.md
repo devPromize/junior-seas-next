@@ -4,7 +4,7 @@ Everything we've learned about how the shop's old point-of-sale system was reall
 gathered in one place. Each finding came from the data or from walking through its screens, and
 each one shaped a rule in the new POS. Written to be shared: no vendor names and no takings.
 
-Last updated: 23 October 2026.
+Last updated: 23 October 2026 (18 findings).
 
 ---
 
@@ -48,6 +48,12 @@ Last updated: 23 October 2026.
    → *New POS:* the cashier picks who authorised it, and that person and the owner get an alert.
 
 8. **263 customer sales were left "due" or "part-paid"**, with nothing following them up.
+
+18. **Expenses were barely recorded.** In 18 months: three entries. One was a test, and one food
+    expense was saved as a "refund" by mistake. Daily spending (diesel, food, transport) simply
+    wasn't in the system, so the day's cash could never be reconciled.
+    → *New POS:* recording an expense is a few taps (type, amount, what for) with an optional
+    photo, and cash expenses come off the cashier's cash-up automatically.
 
 ## Customers
 

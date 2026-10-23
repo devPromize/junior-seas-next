@@ -532,3 +532,43 @@ transfer refused). All passing.
 - The phone lookup: type an IMEI, see the phone's whole story in one box.
 - A return: tick, "Faulty", "Return and refund ₦7,000".
 - The findings list itself makes a good post: "17 things we learned from 18 months of data".
+
+---
+
+## 2026-10-23 · Session 15: Money (D-038)
+
+**What we built**
+- **Money → Today:** what came in and through which account, refunds, expenses, payments to
+  suppliers, each cashier's cash-up, and what we owe suppliers. Pick any date.
+- **Supplier bills:** every purchase that's still owed, oldest first, with a "Record payment"
+  form right on it. Each purchase page shows its payments. New purchases ask "Has the supplier
+  been paid?".
+- **Expenses:** tap the type (Diesel / fuel, Electricity, Food…), amount, what for, done. Optional
+  receipt photo.
+- **Cash-up:** the cashier sees what should be in the drawer and types what's actually there.
+  Balanced, or short/over with a reason that goes straight to the owner.
+- **Alerts:** a count in the sidebar and a page that lists discount alerts, short cash-ups and
+  overdue supplier bills, each linking to the sale or purchase.
+- **Bank & card accounts:** add or retire the accounts payments go into.
+
+**What broke, and how we fixed it**
+- *The till's two scheduled jobs had never run.* **What happened:** in session 7 we wrote "release
+  phones held by abandoned orders after 30 minutes" and "cancel unpaid orders at midnight", but
+  nothing was scheduling them. **How we found it:** setting up the supplier reminders needed a
+  scheduler, and the scheduler wasn't switched on. **Fix:** switched it on and scheduled all three
+  jobs.
+- *More web codes in old names.* "GOD&#039;SWILL COMM" showed on the supplier bills. Fixed, and
+  checked every name in suppliers, products, customers, sales and purchases.
+
+**What we learned from the old data**
+- In 18 months only three expenses were recorded, one a test and one saved as a "refund" by
+  mistake (finding 18).
+
+**Tests:** 17 new tests (old purchases settled; only the right people pay suppliers; overpaying,
+future dates and transfers without an account refused; a bill can't be paid twice; a 40-day-old
+bill reminds owner and manager once a week; expenses checked; cash-up expects the right cash, needs
+a note when short and alerts the owner; overview; alerts; accounts). All passing.
+
+**Worth showing**
+- The cash-up screen: "Should be in the drawer ₦…", type the count, "Balanced."
+- A supplier bill with "Record payment" open: amount, date, transfer from OPay, "Paid in full".

@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const items = navFor(me).map(({ label, href }) => ({ label, href }));
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr] print:block">
-      <Sidebar items={items} name={me.name} role={me.role} showPin={can(me, 'sales.discount')} />
+      <Sidebar items={items} name={me.name} role={me.role} showPin={can(me, 'sales.discount')} unreadAlerts={me.unread_alerts} />
       <div className="min-w-0">{children}</div>
     </div>
   );

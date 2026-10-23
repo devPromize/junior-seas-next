@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getMe } from '@/lib/me';
+import { can } from '@/lib/pos';
 import type { ProductOptions } from '@/lib/products';
 import StockTabs from '../../StockTabs';
 import PurchaseForm from './PurchaseForm';
 
 export default async function NewPurchasePage() {
-  const { data, error } = await (await createClient()).rpc('pos_product_options');
+  const [{ data, error }, { me }] = await Promise.all([(await createClient()).rpc('pos_product_options'), getMe()]);
   const options = data as ProductOptions | null;
   if (error || !options?.can.receive) redirect('/stock');
 
@@ -14,7 +16,7 @@ export default async function NewPurchasePage() {
       <h1 className="text-2xl font-bold">Stock</h1>
       <StockTabs active="purchases" can={options.can} />
       <h2 className="text-xl font-semibold">New purchase</h2>
-      <PurchaseForm options={options} />
+      <PurchaseForm options={options} accounts={me?.payment_accounts ?? []} canPay={!!me && can(me, 'suppliers.pay')} />
     </main>
   );
 }

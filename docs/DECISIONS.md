@@ -352,3 +352,32 @@ supplier payments stopped being recorded in early 2026 (₦210M shows as "due").
 **Why:** Returns are the most sensitive thing at a till. The refund amount comes from the data,
 not from someone's memory. History means a customer who bought before the switch is still
 looked after.
+
+### D-038 · Money: supplier bills, expenses, cash-up, alerts (2026-10-23)
+**Choice:**
+- **Supplier bills.** Every purchase is owed until it's paid. All purchases from the old system
+  are marked settled, because the shop was paying them and the old system just wasn't told.
+  - Recording a payment is one form: amount (the full balance unless changed), date paid, cash or
+    transfer, and from which account.
+  - It's checked: nobody can pay more than is owed, date a payment in the future, or record a
+    transfer without the account.
+  - A new purchase asks "Has the supplier been paid?" (Not yet / Paid in full), and a cost is
+    now required on every line, because that's how we know what's owed.
+  - Anything unpaid after **30 days** alerts the owner and everyone who pays suppliers, weekly,
+    until it's paid.
+- **Expenses**: type (one tap), amount, what for, cash or transfer, optional receipt photo.
+  Numbered EX2026/0001… Recording an expense older than a month needs the owner.
+- **Cash-up**: per cashier, since their last cash-up. The system shows float + cash from sales −
+  cash refunds − cash expenses − cash paid to suppliers = what should be in the drawer, plus the
+  transfers and card payments per account to check against each bank app. A difference needs a
+  note and alerts the owner.
+- **Alerts** now have a home (sidebar count, Alerts page): discounts, short or over cash-ups and
+  overdue supplier bills.
+- **Bank & card accounts** are managed in Money (add Moniepoint, stop using an old bank…).
+- New permissions: "See money", "Record payments to suppliers", "Record expenses" (Manager by
+  default).
+- **Scheduled jobs are switched on**: release phones held by abandoned orders (every 5 minutes),
+  cancel orders left unpaid from the day before (just after midnight), supplier reminders (8 a.m.).
+**Why:** In the old system staff never learned how to mark a supplier paid, so every purchase
+this year showed as "due", and expenses were almost never recorded. Both need to be so simple
+they actually get done, and checked so they can't be done wrong.

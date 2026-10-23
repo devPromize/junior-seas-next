@@ -13,7 +13,7 @@ export const NAV: NavItem[] = [
   { label: 'Stock', href: '/stock', anyOf: ['stock.receive', 'stock.adjust', 'stock.transfer', 'costs.view'] },
   { label: 'Customers', anyOf: ['sales.view_floor', 'sales.view_all', 'customers.export'] },
   { label: 'Staff', href: '/staff', anyOf: ['staff.manage'] },
-  { label: 'Money', anyOf: ['till.manage', 'settings.manage'] },
+  { label: 'Money', href: '/money', anyOf: ['money.view', 'suppliers.pay', 'expenses.manage', 'till.manage', 'settings.manage'] },
   { label: 'Reports', anyOf: ['reports.view'] },
   { label: 'Settings', href: '/settings', anyOf: ['settings.manage'] },
 ];

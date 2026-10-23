@@ -4,11 +4,15 @@ import { naira } from '@/lib/pos';
 import type { ProductOptions } from '@/lib/products';
 import StockTabs from '../../StockTabs';
 import AddDocument from './AddDocument';
+import PaySupplierForm from '@/components/PaySupplierForm';
+import { getMe } from '@/lib/me';
 
 type Purchase = {
   id: string; ref_no: string | null; received_at: string; supplier_ref: string | null; note: string | null; is_legacy: boolean;
   supplier: { id: number; name: string; phone: string | null } | null; department: string; received_by: string | null;
-  total_cost_kobo: number | null; amount_paid_kobo: number | null;
+  total_cost_kobo: number | null;
+  owed_kobo: number | null; settled_note: string | null; can_pay: boolean;
+  payments: { amount_kobo: number; paid_on: string; method: string; account: string | null; reference: string | null; by: string | null }[] | null;
   lines: { item_id: number | null; name: string; qty: number; unit_cost_kobo: number | null; new_price_kobo: number | null; codes: string[] | null }[];
   documents: { id: string; path: string; content_type: string; uploaded_at: string }[];
 };
@@ -16,7 +20,7 @@ type Purchase = {
 export default async function PurchasePage({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }>;
 }) {
-  const [{ id }, { new: justSaved }] = await Promise.all([params, searchParams]);
+  const [{ id }, { new: justSaved }, { me }] = await Promise.all([params, searchParams, getMe()]);
   const supabase = await createClient();
   const [opts, res] = await Promise.all([supabase.rpc('pos_product_options'), supabase.rpc('pos_purchase', { p_id: id })]);
   if (res.error) {
@@ -79,6 +83,26 @@ export default async function PurchasePage({ params, searchParams }: {
           )}
         </table>
       </section>
+
+      {p.payments && (
+        <section className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-semibold">Payment to the supplier</h2>
+            {p.settled_note
+              ? <span className="text-sm text-brand">{p.settled_note}</span>
+              : p.owed_kobo
+                ? <span className="font-semibold text-bad">Owed {naira(p.owed_kobo)}</span>
+                : p.total_cost_kobo ? <span className="font-semibold text-brand">Paid in full</span> : <span className="text-sm text-ink-soft">No cost recorded</span>}
+          </div>
+          {p.payments.map((pay, i) => (
+            <p key={i} className="text-sm">
+              {new Date(pay.paid_on).toLocaleDateString('en-NG', { dateStyle: 'medium' })} · {naira(pay.amount_kobo)} by {pay.method}
+              {pay.account ? ` (${pay.account})` : ''}{pay.reference ? ` · ref ${pay.reference}` : ''}{pay.by ? ` · recorded by ${pay.by}` : ''}
+            </p>
+          ))}
+          {p.can_pay && me && p.owed_kobo ? <PaySupplierForm deliveryId={p.id} owedKobo={p.owed_kobo} accounts={me.payment_accounts} /> : null}
+        </section>
+      )}
 
       <section className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
         <h2 className="font-semibold">Supplier’s receipt</h2>

@@ -18,6 +18,7 @@ export type Me = {
   payment_accounts: PaymentAccount[];
   authorisers: Person[] | null;
   settings: Record<string, unknown>;
+  unread_alerts: number;
 };
 
 export const can = (me: Me, permission: string) => me.is_owner || me.permissions.includes(permission);

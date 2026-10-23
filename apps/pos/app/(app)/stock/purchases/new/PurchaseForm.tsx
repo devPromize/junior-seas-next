@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { naira } from '@/lib/pos';
+import { naira, type PaymentAccount } from '@/lib/pos';
 import { nairaToKobo, type ProductOptions, type ProductRow } from '@/lib/products';
 import ProductPicker from '@/components/ProductPicker';
 import SupplierPicker, { type Supplier } from '@/components/SupplierPicker';
@@ -14,8 +14,13 @@ type Line = { key: number; product: ProductRow; qty: string; cost: string; price
 // Record a purchase: supplier, department, the items (phones scanned by IMEI), their cost, and
 // optionally a new selling price, as staff did on the old system. Photos or a PDF of the
 // supplier's receipt can be attached.
-export default function PurchaseForm({ options }: { options: ProductOptions }) {
+export default function PurchaseForm({
+  options, accounts, canPay,
+}: { options: ProductOptions; accounts: PaymentAccount[]; canPay: boolean }) {
   const router = useRouter();
+  const [paid, setPaid] = useState<'not_yet' | 'in_full'>('not_yet');
+  const [payMethod, setPayMethod] = useState<'cash' | 'transfer'>('transfer');
+  const [payAccount, setPayAccount] = useState<number | null>(null);
   const [departmentId, setDepartmentId] = useState(options.departments[0]?.id ?? 0);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [invoice, setInvoice] = useState('');
@@ -58,13 +63,27 @@ export default function PurchaseForm({ options }: { options: ProductOptions }) {
         ...(l.product.tracks_imei ? { codes: l.codes } : { qty: Number(l.qty) }),
       })),
     });
+    if (error) {
+      setBusy(false);
+      return setError(error.message);
+    }
+    // Paid on the spot: record the payment too. If that fails the purchase is still saved, and
+    // its page shows what's owed with a "Record payment" form.
+    if (canPay && paid === 'in_full' && data.total_cost_kobo > 0) {
+      await createClient().rpc('pos_pay_supplier', {
+        p_delivery_id: data.delivery_id, p_amount_kobo: data.total_cost_kobo,
+        p_paid_on: new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }),
+        p_method: payMethod, p_account_id: payMethod === 'cash' ? null : payAccount,
+      });
+    }
     setBusy(false);
-    if (error) return setError(error.message);
     router.push(`/stock/purchases/${data.delivery_id}?new=1`);
   }
 
   const field = 'rounded-lg border border-line bg-panel px-3 py-2.5';
-  const ready = lines.length > 0 && lines.every((l) => qtyOf(l) > 0) && !busy;
+  const missingCost = lines.some((l) => !(nairaToKobo(l.cost) ?? 0));
+  const ready = lines.length > 0 && lines.every((l) => qtyOf(l) > 0) && !missingCost
+    && (paid === 'not_yet' || payMethod === 'cash' || payAccount) && !busy;
   return (
     <div className="flex flex-col gap-4">
       <section className="grid gap-3 rounded-xl border border-line bg-panel p-4 sm:grid-cols-3">
@@ -118,7 +137,7 @@ export default function PurchaseForm({ options }: { options: ProductOptions }) {
                 <label className="flex items-center gap-2 text-sm">
                   Cost each, ₦
                   <input inputMode="decimal" value={l.cost} onChange={(e) => update(l.key, { cost: e.target.value })}
-                    placeholder="Optional" className={`${field} tabular w-28`} />
+                    placeholder="Required" className={`${field} tabular w-28 ${l.cost ? '' : 'border-warn'}`} />
                 </label>
                 {options.can.prices && (
                   <label className="flex items-center gap-2 text-sm">
@@ -149,6 +168,36 @@ export default function PurchaseForm({ options }: { options: ProductOptions }) {
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className={field} />
       </section>
 
+      {canPay && lines.length > 0 && (
+        <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-panel p-4">
+          <span className="font-semibold">Has the supplier been paid?</span>
+          <div className="flex overflow-hidden rounded-lg border border-line text-sm">
+            {([['not_yet', 'Not yet'], ['in_full', 'Paid in full']] as const).map(([k, label]) => (
+              <button key={k} type="button" onClick={() => setPaid(k)}
+                className={`px-3 py-2 font-medium ${paid === k ? 'bg-brand text-white' : 'bg-panel'}`}>{label}</button>
+            ))}
+          </div>
+          {paid === 'in_full' && (
+            <>
+              <div className="flex overflow-hidden rounded-lg border border-line text-sm">
+                {(['transfer', 'cash'] as const).map((m) => (
+                  <button key={m} type="button" onClick={() => { setPayMethod(m); setPayAccount(null); }}
+                    className={`px-3 py-2 font-medium capitalize ${payMethod === m ? 'bg-brand text-white' : 'bg-panel'}`}>{m}</button>
+                ))}
+              </div>
+              {payMethod === 'transfer' && (
+                <select value={payAccount ?? ''} onChange={(e) => setPayAccount(Number(e.target.value) || null)} className={field}>
+                  <option value="">From which account?</option>
+                  {accounts.filter((a) => a.transfer).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              )}
+            </>
+          )}
+          {paid === 'not_yet' && <span className="text-sm text-ink-soft">It’ll show under Money → Supplier bills until it’s paid.</span>}
+        </section>
+      )}
+
+      {missingCost && lines.length > 0 && <p className="text-sm text-warn">Enter the cost of each item: it’s how we know what’s owed and what each sale makes.</p>}
       {error && <p role="alert" className="rounded-lg bg-bad-soft px-4 py-3 text-bad">{error}</p>}
       <button onClick={save} disabled={!ready} className="self-start rounded-lg bg-brand px-5 py-3 font-bold text-white disabled:opacity-40">
         {busy ? 'Saving…' : `Save purchase · ${pieces} piece${pieces === 1 ? '' : 's'}${totalCost ? ` · ${naira(totalCost)}` : ''}`}

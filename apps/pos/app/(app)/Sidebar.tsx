@@ -7,7 +7,9 @@ import { signOut } from '../actions';
 
 type Item = { label: string; href?: string };
 
-export default function Sidebar({ items, name, role, showPin }: { items: Item[]; name: string; role: string; showPin: boolean }) {
+export default function Sidebar({ items, name, role, showPin, unreadAlerts }: {
+  items: Item[]; name: string; role: string; showPin: boolean; unreadAlerts: number;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);   // close the phone menu after choosing
@@ -29,20 +31,25 @@ export default function Sidebar({ items, name, role, showPin }: { items: Item[];
         className={`${open ? 'flex' : 'hidden'} fixed inset-x-0 bottom-0 top-[57px] z-20 flex-col gap-0.5 overflow-y-auto border-r border-line bg-panel p-3
                     lg:sticky lg:top-0 lg:flex lg:h-dvh print:hidden`}>
         <p className="mb-2 hidden px-3 pt-1 font-bold text-brand lg:block">Junior Seas POS</p>
+        <Link href="/alerts"
+          className={`flex items-center justify-between rounded-lg px-3 py-1.5 font-medium ${active('/alerts') ? 'bg-brand-soft text-brand' : 'hover:bg-paper'}`}>
+          Alerts
+          {unreadAlerts > 0 && <span className="rounded-full bg-bad px-2 py-0.5 text-xs font-bold text-white">{unreadAlerts}</span>}
+        </Link>
         {items.map((item) =>
           item.href ? (
             <Link key={item.label} href={item.href}
-              className={`rounded-lg px-3 py-2 font-medium ${active(item.href) ? 'bg-brand-soft text-brand' : 'hover:bg-paper'}`}>
+              className={`rounded-lg px-3 py-1.5 font-medium ${active(item.href) ? 'bg-brand-soft text-brand' : 'hover:bg-paper'}`}>
               {item.label}
             </Link>
           ) : (
-            <span key={item.label} className="flex items-center justify-between rounded-lg px-3 py-2 text-ink-soft opacity-60">
+            <span key={item.label} className="flex items-center justify-between rounded-lg px-3 py-1.5 text-ink-soft opacity-60">
               {item.label}
               <span className="text-xs font-semibold uppercase tracking-wider">Soon</span>
             </span>
           )
         )}
-        <div className="mt-auto border-t border-line px-3 pt-3">
+        <div className="mt-auto border-t border-line px-3 pt-2">
           <p className="font-semibold">{name}</p>
           <p className="text-sm text-ink-soft">{role}</p>
           {showPin && <Link href="/pin" className="mt-2 block text-sm font-medium underline">My PIN</Link>}
