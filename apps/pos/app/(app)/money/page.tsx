@@ -9,7 +9,7 @@ type Overview = {
   day: string;
   takings: { method: string; account: string | null; amount_kobo: number; unconfirmed_kobo: number | null }[];
   takings_kobo: number; refunds_kobo: number; expenses_kobo: number; supplier_payments_kobo: number;
-  owing_kobo: number; overdue: number; unconfirmed_kobo: number; to_confirm: number;
+  owing_kobo: number; overdue: number; unconfirmed_kobo: number; to_confirm: number; sales_waiting: number;
   cash_ups: { id: string; by: string | null; at: string; expected_kobo: number; counted_kobo: number; difference_kobo: number; note: string | null }[];
 };
 const METHOD: Record<string, string> = { cash: 'Cash', transfer: 'Transfer', card: 'Card', online: 'Online' };
@@ -35,6 +35,11 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
 
       {o && (
         <>
+          {o.sales_waiting > 0 && (
+            <Link href="/money/confirm" className="rounded-lg bg-bad-soft px-4 py-3 font-semibold text-bad">
+              {o.sales_waiting} customer{o.sales_waiting === 1 ? ' is' : 's are'} waiting at the till for a payment to be confirmed →
+            </Link>
+          )}
           {o.to_confirm > 0 && (
             <Link href="/money/confirm" className="rounded-lg bg-warn-soft px-4 py-3 font-medium text-warn">
               {o.to_confirm} payment{o.to_confirm === 1 ? '' : 's'} ({naira(o.unconfirmed_kobo)}) into accounts like Boss’s still need confirming →

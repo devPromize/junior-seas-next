@@ -7,6 +7,7 @@ export type PaymentAccount = {
   id: number; name: string; transfer: boolean; card: boolean; online: boolean;
   bank_name: string | null; account_number: string | null; account_name: string | null;
   holder: 'business' | 'personal'; needs_confirmation: boolean;   // e.g. Boss's own account: payments get confirmed afterwards
+  confirm_before_sale: boolean;   // the sale waits at the till until someone confirms the money arrived
 };
 export type Person = { user_id: string; name: string };
 

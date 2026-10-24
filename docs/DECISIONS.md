@@ -440,3 +440,23 @@ The convention in other systems is to set up payment types centrally (Square's c
 methods can only be deactivated, never deleted, to protect reports) and to confirm transfers
 that can't be seen instantly (Moniepoint holds POS transfers until the merchant accepts them).
 Here we confirm after the sale, so the queue never waits.
+
+### D-042 · Accounts that hold the sale until the money is confirmed (2026-10-24)
+**Choice:**
+- Each account now has one of three checking modes: **no checking**, **confirm after the sale**
+  (D-041), or **confirm before the goods go** (new). Personal accounts must use one of the two
+  checking modes. The owner (or whoever has "Manage bank and card accounts") picks the mode per account.
+- With "before", **Send for confirmation** first runs the whole checkout and then undoes it, so any
+  mistake (short payment, stock, discount) shows at the till straight away. The order then waits
+  in Checkout: phones stay held with no time limit, nothing leaves stock, no receipt is printed, and
+  it isn't cancelled at the end of the day. The owner and managers are alerted.
+- **Received** completes the sale in the cashier's name. The payment is recorded as already
+  confirmed by that person, so nobody is asked about it twice, and the cashier's screen opens the
+  receipt by itself. **Not received** needs a note, alerts the cashier and the owner, and puts the
+  order back in the queue to take another payment.
+- While waiting, the order can't be cancelled or changed. The cashier can **stop waiting** (e.g. the
+  customer decides to pay cash), which is logged and tells the watchers there's nothing to check.
+**Why:** The owner wanted a "just in case" option for accounts they want to be sure of before the
+goods leave. It's per account rather than shop-wide, so ordinary sales stay fast.
+**Limit:** stock for non-phone items isn't reserved while waiting. If the last one sells meanwhile,
+"Received" shows the stock error, and the cashier stops waiting, fixes the order and sends it again.

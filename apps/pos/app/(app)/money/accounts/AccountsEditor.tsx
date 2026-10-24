@@ -7,18 +7,25 @@ import { createClient } from '@/lib/supabase/client';
 export type Account = {
   id: number; name: string; transfer: boolean; card: boolean; online: boolean; is_active: boolean;
   bank_name: string | null; account_number: string | null; account_name: string | null;
-  holder: 'business' | 'personal'; needs_confirmation: boolean; used: number;
+  holder: 'business' | 'personal'; needs_confirmation: boolean; confirm_before_sale: boolean; used: number;
 };
 type Draft = Omit<Account, 'id' | 'used'> & { id: number | null };
+type Mode = 'none' | 'after' | 'before';
 
 const EMPTY: Draft = {
   id: null, name: '', transfer: true, card: false, online: false, is_active: true,
-  bank_name: '', account_number: '', account_name: '', holder: 'business', needs_confirmation: false,
+  bank_name: '', account_number: '', account_name: '', holder: 'business', needs_confirmation: false, confirm_before_sale: false,
 };
+const MODES: { mode: Mode; label: string; help: string }[] = [
+  { mode: 'none', label: 'No checking', help: 'The shop can see this account itself. The sale goes through at once.' },
+  { mode: 'after', label: 'Confirm after the sale', help: 'The sale goes through at once. The owner and managers are alerted, and someone confirms in Money → Payments to confirm that the money arrived.' },
+  { mode: 'before', label: 'Confirm before the goods go', help: 'The sale waits at the till until the owner or a manager confirms the money arrived. Phones stay held and nothing leaves stock until then. Use it for accounts you want to be sure of.' },
+];
+const modeOf = (a: Draft | Account): Mode => (a.confirm_before_sale ? 'before' : a.needs_confirmation || a.holder === 'personal' ? 'after' : 'none');
 
 // Where customers' money goes. Each card machine gets its own entry, so each machine's daily total
-// can be checked against its slip. Someone's personal account (e.g. Boss's) is allowed, and every
-// payment into it is confirmed afterwards without holding up the sale.
+// can be checked against its slip. Someone's personal account (e.g. Boss's) is allowed; payments
+// into it are confirmed afterwards, or, if the owner chooses, before the sale completes.
 export default function AccountsEditor({ rows }: { rows: Account[] }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -31,7 +38,7 @@ export default function AccountsEditor({ rows }: { rows: Account[] }) {
     const { error } = await createClient().rpc('pos_save_payment_account', {
       p_id: d.id, p_name: d.name, p_transfer: d.transfer, p_card: d.card, p_online: d.online, p_is_active: d.is_active,
       p_bank_name: d.bank_name || null, p_account_number: d.account_number || null, p_account_name: d.account_name || null,
-      p_holder: d.holder, p_needs_confirmation: d.needs_confirmation,
+      p_holder: d.holder, p_needs_confirmation: d.needs_confirmation, p_confirm_before_sale: d.confirm_before_sale,
     });
     setBusy(false);
     if (error) return setError(error.message);
@@ -55,7 +62,9 @@ export default function AccountsEditor({ rows }: { rows: Account[] }) {
               <span className={`block font-semibold ${a.is_active ? '' : 'text-ink-soft line-through'}`}>
                 {a.name}
                 {a.holder === 'personal' && <span className="ml-2 rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">Personal</span>}
-                {a.needs_confirmation && <span className="ml-2 rounded-full bg-paper px-2 py-0.5 text-xs font-medium text-ink-soft">Confirmed afterwards</span>}
+                {a.confirm_before_sale
+                  ? <span className="ml-2 rounded-full bg-warn-soft px-2 py-0.5 text-xs font-medium text-warn">Sale waits for confirmation</span>
+                  : a.needs_confirmation && <span className="ml-2 rounded-full bg-paper px-2 py-0.5 text-xs font-medium text-ink-soft">Confirmed afterwards</span>}
               </span>
               <span className="text-sm text-ink-soft">
                 {[a.bank_name, a.account_number, a.account_name].filter(Boolean).join(' · ') || 'No account details'} · takes {takes(a)}
@@ -100,15 +109,23 @@ export default function AccountsEditor({ rows }: { rows: Account[] }) {
                 </button>
               ))}
             </div>
-            <label className="flex items-center gap-2 font-medium">
-              <input type="checkbox" checked={draft.needs_confirmation || draft.holder === 'personal'} disabled={draft.holder === 'personal'}
-                onChange={(e) => setDraft({ ...draft, needs_confirmation: e.target.checked })} className="h-5 w-5" />
-              Payments into it need confirming afterwards
-            </label>
-            <span className="text-ink-soft">
-              The sale still goes through at once. The owner and managers are alerted, and someone confirms in Money → Payments to confirm
-              that the money arrived.{draft.holder === 'personal' ? ' Always on for personal accounts.' : ''}
-            </span>
+            <span className="mt-1 font-medium">Checking payments into it</span>
+            <div className="flex flex-col gap-2">
+              {MODES.map(({ mode, label, help }) => {
+                // Personal accounts are always checked one way or the other.
+                const blocked = mode === 'none' && draft.holder === 'personal';
+                return (
+                  <label key={mode} className={`flex items-start gap-2 ${blocked ? 'opacity-40' : ''}`}>
+                    <input type="radio" name="confirm-mode" checked={modeOf(draft) === mode} disabled={blocked} className="mt-0.5 h-5 w-5"
+                      onChange={() => setDraft({ ...draft, needs_confirmation: mode !== 'none', confirm_before_sale: mode === 'before' })} />
+                    <span>
+                      <span className="font-medium">{label}</span>
+                      <span className="block text-ink-soft">{help}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
           <div className="flex gap-2">
             <button disabled={busy || !draft.name.trim()} className="rounded-lg bg-brand px-4 py-2 font-semibold text-white disabled:opacity-40">Save</button>

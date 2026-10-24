@@ -716,3 +716,33 @@ a manager's confirmation is recorded). All passing.
 
 **Worth showing**
 - The alert on the owner's phone, and the one-tap "Received ✓".
+
+## 2026-10-24 · Session 18b: Hold the sale until the payment is confirmed (D-042)
+
+**What we built**
+- In Money → Bank & card accounts, each account now has **Checking payments into it**: *No
+  checking*, *Confirm after the sale*, or *Confirm before the goods go*.
+- At checkout, choosing a "before" account turns the button into **Send for confirmation**. The
+  order shows as *waiting* in the queue with "Don't hand over the goods yet".
+- The owner and managers get *"Sale waiting: confirm ₦45,000 in Boss – Access Bank"*. In Money →
+  Payments to confirm, "Customers waiting at the till" is listed first. **Received ✓** completes the
+  sale and the cashier's screen jumps to the receipt. **Not received ✗** sends it back to take
+  another payment.
+- Money → Today shows a red banner while a customer is waiting.
+
+**Under the hood:** checkout was split into "checkout as a given cashier", so a manager's confirmation
+can finish the sale in the name of the cashier who took the money. Before holding a sale, the system
+runs the full checkout and undoes it, so errors show at the till, not later.
+
+**Tests:** 12 new tests (short payment caught at once; held sale records no payment and takes nothing
+from stock; owner and manager alerted; can't check out twice or cancel while waiting; cashiers can't
+confirm; "Not received" needs a note and returns the order; stop waiting; "Received" completes it
+under the cashier with the payment already confirmed and stock down 1; cash sales unaffected).
+The till (28) and checkout (9) tests were re-run against the new checkout: all passing.
+
+**What broke:** nothing in the tests. The connection dropped halfway through the session, and work
+continued from where it stopped.
+
+**Worth showing**
+- Side by side: the cashier's "waiting" screen and the manager's phone with "Received ✓". Tap it,
+  and the cashier's screen turns into the receipt.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { can, naira, type Me } from '@/lib/pos';
 
@@ -15,6 +15,8 @@ type QueueOrder = {
   discount_requested_kobo: number | null; discount_approved_kobo: number | null;
   customer: { id: string; name: string; phone: string } | null; customer_declined: boolean;
   subtotal_kobo: number; lines: QueueLine[] | null;
+  // Paid into an account the owner wants checked first: the sale waits until someone confirms.
+  awaiting: { amount_kobo: number; accounts: string; at: string; cashier: string | null } | null;
 };
 type Method = 'cash' | 'transfer' | 'card' | 'online';
 type Payment = { key: number; method: Method; accountId: number | null; amount: string };
@@ -56,10 +58,16 @@ export default function CheckoutScreen({ me }: { me: Me }) {
   }, [loadQueue]);
 
   const order = queue?.find((o) => o.sale_id === selectedId) ?? null;
+  const wasAwaiting = useRef(false);
   useEffect(() => {
-    // The order was paid or cancelled elsewhere: let go of it.
-    if (selectedId && queue && !order) setSelectedId(null);
-  }, [queue, order, selectedId]);
+    if (order) wasAwaiting.current = !!order.awaiting;
+    if (selectedId && queue && !order) {
+      // A waiting order can only leave the queue by being confirmed: go straight to its receipt.
+      if (wasAwaiting.current) router.push(`/receipt/${selectedId}?new=1`);
+      // Otherwise it was paid or cancelled elsewhere: let go of it.
+      else setSelectedId(null);
+    }
+  }, [queue, order, selectedId, router]);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4">
@@ -90,6 +98,9 @@ export default function CheckoutScreen({ me }: { me: Me }) {
               {o.discount_requested_kobo ? (
                 <span className="text-sm font-medium text-warn">Discount promised: {naira(o.discount_requested_kobo)}</span>
               ) : null}
+              {o.awaiting && (
+                <span className="text-sm font-medium text-warn">Waiting for {naira(o.awaiting.amount_kobo)} into {o.awaiting.accounts} to be confirmed</span>
+              )}
             </button>
           ))}
         </section>
@@ -179,14 +190,45 @@ function OrderPanel({
 
   async function completeSale() {
     if (!ready) return;
-    const res = await call<{ sale_id: string }>('pos_checkout', {
+    const res = await call<{ sale_id: string; awaiting?: boolean }>('pos_checkout', {
       p_sale_id: order.sale_id,
       p_payments: payments.map((p) => ({ method: p.method, account_id: p.method === 'cash' ? null : p.accountId, amount_kobo: toKobo(p.amount) })),
       p_discount_kobo: discountKobo,
       p_receipt_note: note || null,
       p_authorised_by: discountKobo > 0 && !preApproved ? authorisedBy || null : null,
     });
-    if (res) onPaid(res.sale_id);
+    if (res?.awaiting) onChanged();   // stays in the queue, now shown as waiting
+    else if (res) onPaid(res.sale_id);
+  }
+
+  async function stopWaiting() {
+    if (await call('pos_stop_waiting', { p_sale_id: order.sale_id })) {
+      setPayments([]);
+      onChanged();
+    }
+  }
+
+  const box = 'rounded-xl border border-line bg-panel p-4';
+  if (order.awaiting) {
+    return (
+      <div className="flex flex-col gap-3">
+        <div className={`${box} flex flex-col gap-2 border-warn`}>
+          <h2 className="text-lg font-bold">{order.receipt_no} · waiting for confirmation</h2>
+          <p>
+            <b>Don’t hand over the goods yet.</b> {order.awaiting.cashier ?? 'The cashier'} recorded {naira(order.awaiting.amount_kobo)} paid
+            into <b>{order.awaiting.accounts}</b>. The owner and managers have been alerted. When one of them confirms the money arrived,
+            the sale completes and the receipt opens here by itself.
+          </p>
+          <p className="text-sm text-ink-soft">
+            Waiting {minutesAgo(order.awaiting.at)} min · {(order.lines ?? []).map((l) => l.item_name).join(', ')}
+          </p>
+        </div>
+        {error && <p role="alert" className="rounded-lg bg-bad-soft px-4 py-3 text-bad">{error}</p>}
+        <button onClick={stopWaiting} disabled={busy} className="self-start rounded-lg border border-line px-4 py-2.5 font-semibold disabled:opacity-40">
+          Customer will pay another way: stop waiting
+        </button>
+      </div>
+    );
   }
 
   async function confirmRemove() {
@@ -201,8 +243,7 @@ function OrderPanel({
     }
   }
 
-  const box = 'rounded-xl border border-line bg-panel p-4';
-  const field = 'rounded-lg border border-line bg-panel px-3 py-2.5';
+  const field ='rounded-lg border border-line bg-panel px-3 py-2.5';
   return (
     <div className="flex flex-col gap-3">
       <div className={box}>
@@ -321,7 +362,9 @@ function OrderPanel({
               return (
                 <p className="w-full pl-[5.5rem] text-sm text-ink-soft">
                   {[a.bank_name, a.account_number, a.account_name].filter(Boolean).join(' · ')}
-                  {a.needs_confirmation && <span className="block text-warn">The owner and managers will be asked to confirm this payment arrived. The sale goes through now.</span>}
+                  {a.confirm_before_sale
+                    ? <span className="block text-warn">This account is checked first: the sale waits until the owner or a manager confirms the money arrived. Don’t hand over the goods until then.</span>
+                    : a.needs_confirmation && <span className="block text-warn">The owner and managers will be asked to confirm this payment arrived. The sale goes through now.</span>}
                 </p>
               );
             })()}
@@ -346,7 +389,10 @@ function OrderPanel({
       {error && <p role="alert" className="rounded-lg bg-bad-soft px-4 py-3 text-bad">{error}</p>}
       <button onClick={completeSale} disabled={!ready}
         className="rounded-lg bg-brand px-4 py-4 text-lg font-bold text-white disabled:opacity-40">
-        {busy ? 'Working…' : `Complete sale · ${naira(total)}`}
+        {busy ? 'Working…'
+          : payments.some((p) => me.payment_accounts.find((a) => a.id === p.accountId)?.confirm_before_sale && p.method !== 'cash')
+            ? `Send for confirmation · ${naira(total)}`
+            : `Complete sale · ${naira(total)}`}
       </button>
       {canRemove && !removing && (
         <button onClick={() => setRemoving({ lineId: 'order', reason: '' })} className="self-start text-sm text-bad underline">

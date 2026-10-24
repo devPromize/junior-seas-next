@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-export default function ConfirmButtons({ paymentId }: { paymentId: number }) {
+// Either one payment already taken (confirmed afterwards), or a whole sale waiting at the till.
+export default function ConfirmButtons({ paymentId, saleId }: { paymentId?: number; saleId?: string }) {
   const router = useRouter();
   const [notReceived, setNotReceived] = useState(false);
   const [note, setNote] = useState('');
@@ -14,7 +15,9 @@ export default function ConfirmButtons({ paymentId }: { paymentId: number }) {
   async function decide(received: boolean) {
     setBusy(true);
     setError(null);
-    const { error } = await createClient().rpc('pos_confirm_payment', { p_payment_id: paymentId, p_received: received, p_note: note || null });
+    const { error } = saleId
+      ? await createClient().rpc('pos_confirm_sale_payment', { p_sale_id: saleId, p_received: received, p_note: note || null })
+      : await createClient().rpc('pos_confirm_payment', { p_payment_id: paymentId, p_received: received, p_note: note || null });
     setBusy(false);
     if (error) return setError(error.message);
     router.refresh();
