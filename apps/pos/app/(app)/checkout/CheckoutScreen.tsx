@@ -24,6 +24,15 @@ const METHOD_LABEL: Record<Method, string> = { cash: 'Cash', transfer: 'Transfer
 const REMOVE_REASONS = ['Customer changed their mind', 'Wrong item scanned', 'Out of stock on the shelf'];
 const toKobo = (naira: string) => Math.round(Number(naira || 0) * 100);
 const fromKobo = (kobo: number) => String(kobo / 100);
+// Each cashier's usual account per method (e.g. the card machine on their floor), remembered on
+// this device so it's already chosen next time. Borrowing another floor's machine is one tap.
+const usualKey = (user: string, method: string) => `pos.usualAccount.${user}.${method}`;
+function usualAccount(user: string, method: string): number | null {
+  try { return Number(localStorage.getItem(usualKey(user, method))) || null; } catch { return null; }
+}
+function rememberAccount(user: string, method: string, id: number) {
+  try { localStorage.setItem(usualKey(user, method), String(id)); } catch { /* private window: just don't remember */ }
+}
 const minutesAgo = (iso: string) => Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
 
 export default function CheckoutScreen({ me }: { me: Me }) {
@@ -137,9 +146,10 @@ function OrderPanel({
 
   function addPayment(method: Method) {
     const accounts = accountsFor(method);
+    const usual = usualAccount(me.user_id, method);
     setPayments((ps) => [...ps, {
       key: Date.now(), method,
-      accountId: accounts.length === 1 ? accounts[0].id : null,
+      accountId: accounts.length === 1 ? accounts[0].id : accounts.some((a) => a.id === usual) ? usual : null,
       amount: fromKobo(Math.max(0, total - ps.reduce((s, p) => s + toKobo(p.amount), 0))),
     }]);
   }
@@ -290,9 +300,13 @@ function OrderPanel({
           <div key={p.key} className="flex flex-wrap items-center gap-2">
             <span className="w-20 font-medium">{METHOD_LABEL[p.method]}</span>
             {p.method !== 'cash' && (
-              <select value={p.accountId ?? ''} onChange={(e) => updatePayment(p.key, { accountId: Number(e.target.value) || null })}
+              <select value={p.accountId ?? ''} onChange={(e) => {
+                const id = Number(e.target.value) || null;
+                updatePayment(p.key, { accountId: id });
+                if (id) rememberAccount(me.user_id, p.method, id);
+              }}
                 className={`${field} ${p.accountId ? '' : 'border-warn'}`}>
-                <option value="">Which account?</option>
+                <option value="">Which account or POS machine?</option>
                 {accountsFor(p.method).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             )}

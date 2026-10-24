@@ -31,8 +31,9 @@ export default function AccountsEditor({ rows }: { rows: Account[] }) {
   return (
     <section className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
       <p className="text-sm text-ink-soft">
-        Where transfers, card payments and online payments go. Cashiers pick one of these for every non-cash payment,
-        so each account can be checked against its bank app.
+        Where transfers, card payments and online payments go. Give each card machine (POS) its own entry, e.g.
+        “Nombank POS – Phones floor”, so each machine’s daily total can be checked against its slip. Cashiers pick one
+        of these for every non-cash payment, and their usual one is remembered.
       </p>
       <ul className="flex flex-col divide-y divide-line">
         {rows.map((a) => (

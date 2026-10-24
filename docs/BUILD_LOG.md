@@ -682,3 +682,12 @@ merging can't change a price without permission. All passing.
 - *What broke:* the page crashed on first load because the server-side page called a helper
   that lived in a browser-only file. Shared helpers now live in `lib/duplicates.ts`, used by
   both. Found by opening the page before handing it over.
+
+**Follow-up: which POS machine took the money**
+- Every transfer or card payment already records the account it went into, and Money → Today
+  totals it per account. But each floor has its own card machine, and on bad-network days a
+  cashier borrows another floor's. The answer needed no new feature: each machine gets its own
+  entry in Money → Bank & card accounts ("Nombank POS – Phones floor"), so each machine's day
+  total matches its own end-of-day slip.
+- To keep checkout fast, the till now remembers each cashier's usual account per payment type
+  on that device. Normally no tap at all; one tap on the day they borrow another machine.
