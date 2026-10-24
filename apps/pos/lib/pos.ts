@@ -3,7 +3,11 @@
 // A department: Mobile Phones, Accessories, Spare Parts & Repairs. Staff see only the ones the
 // owner gave them access to; the owner sees all of them.
 export type Department = { id: number; code: string; name: string };
-export type PaymentAccount = { id: number; name: string; transfer: boolean; card: boolean; online: boolean };
+export type PaymentAccount = {
+  id: number; name: string; transfer: boolean; card: boolean; online: boolean;
+  bank_name: string | null; account_number: string | null; account_name: string | null;
+  holder: 'business' | 'personal'; needs_confirmation: boolean;   // e.g. Boss's own account: payments get confirmed afterwards
+};
 export type Person = { user_id: string; name: string };
 
 // What public.pos_me() returns.

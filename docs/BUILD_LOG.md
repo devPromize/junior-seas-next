@@ -691,3 +691,28 @@ merging can't change a price without permission. All passing.
   total matches its own end-of-day slip.
 - To keep checkout fast, the till now remembers each cashier's usual account per payment type
   on that device. Normally no tap at all; one tap on the day they borrow another machine.
+
+---
+
+## 2026-10-24 · Session 18: Boss's accounts, confirming payments, and per-person permissions (D-041)
+
+**What we built**
+- **Account details:** bank, account number and account name on every account, shown to the
+  cashier at checkout so they can read them to the customer. Account numbers are checked (10
+  digits) and tidied ("0123 456 789" → "0123456789").
+- **Personal accounts:** set up "Boss – Access Bank" and "Boss – Sterling" as *a person's own*.
+  A customer paying into one goes through instantly, and the owner and managers get: *"₦45,000 was
+  paid into Boss – Access Bank on receipt JS-0000123 (cashier: Ada). Confirm it was received…"*
+- **Money → Payments to confirm:** each one with **Received ✓** or **Not received ✗**. "Not received"
+  needs a note and alerts the owner. Unconfirmed money is shown as such in Money → Today.
+- **Per-person permissions:** the owner can give one manager "Manage bank and card accounts", or any
+  other single permission, without changing their role.
+
+**Tests:** 11 new tests (managers can't manage accounts by default; 9-digit numbers refused; personal
+accounts always need confirming; the owner gives and takes back one manager's permission, and only
+the owner can; a payment into Boss's account completes the sale, waits for confirmation and alerts
+owner and manager but not reps or cashiers; cashiers can't confirm; "Not received" needs a note;
+a manager's confirmation is recorded). All passing.
+
+**Worth showing**
+- The alert on the owner's phone, and the one-tap "Received ✓".

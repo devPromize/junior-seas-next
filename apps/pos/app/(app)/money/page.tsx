@@ -7,9 +7,9 @@ import MoneyTabs, { moneyTabsFor } from './MoneyTabs';
 
 type Overview = {
   day: string;
-  takings: { method: string; account: string | null; amount_kobo: number }[];
+  takings: { method: string; account: string | null; amount_kobo: number; unconfirmed_kobo: number | null }[];
   takings_kobo: number; refunds_kobo: number; expenses_kobo: number; supplier_payments_kobo: number;
-  owing_kobo: number; overdue: number;
+  owing_kobo: number; overdue: number; unconfirmed_kobo: number; to_confirm: number;
   cash_ups: { id: string; by: string | null; at: string; expected_kobo: number; counted_kobo: number; difference_kobo: number; note: string | null }[];
 };
 const METHOD: Record<string, string> = { cash: 'Cash', transfer: 'Transfer', card: 'Card', online: 'Online' };
@@ -35,6 +35,11 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
 
       {o && (
         <>
+          {o.to_confirm > 0 && (
+            <Link href="/money/confirm" className="rounded-lg bg-warn-soft px-4 py-3 font-medium text-warn">
+              {o.to_confirm} payment{o.to_confirm === 1 ? '' : 's'} ({naira(o.unconfirmed_kobo)}) into accounts like Boss’s still need confirming →
+            </Link>
+          )}
           {o.overdue > 0 && (
             <Link href="/money/bills?show=overdue" className="rounded-lg bg-warn-soft px-4 py-3 font-medium text-warn">
               {o.overdue} supplier bill{o.overdue === 1 ? ' is' : 's are'} unpaid after 30 days. Check and record the payments →
@@ -54,7 +59,10 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
               <ul className="flex flex-col divide-y divide-line text-sm">
                 {o.takings.map((t, i) => (
                   <li key={i} className="flex justify-between py-2">
-                    <span>{METHOD[t.method] ?? t.method}{t.account ? ` · ${t.account}` : ''}</span>
+                    <span>
+                      {METHOD[t.method] ?? t.method}{t.account ? ` · ${t.account}` : ''}
+                      {t.unconfirmed_kobo ? <span className="block text-xs text-warn">{naira(t.unconfirmed_kobo)} not confirmed yet</span> : null}
+                    </span>
                     <span className="tabular font-semibold">{naira(t.amount_kobo)}</span>
                   </li>
                 ))}

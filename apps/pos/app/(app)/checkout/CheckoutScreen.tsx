@@ -313,6 +313,18 @@ function OrderPanel({
             <input inputMode="numeric" value={p.amount} onChange={(e) => updatePayment(p.key, { amount: e.target.value.replace(/[^\d.]/g, '') })}
               className={`${field} tabular w-36`} aria-label={`${METHOD_LABEL[p.method]} amount`} />
             <button onClick={() => setPayments((ps) => ps.filter((x) => x.key !== p.key))} className="text-sm text-bad underline">Remove</button>
+            {(() => {
+              // The chosen account's details, to read out to the customer; and a heads-up for
+              // accounts the shop confirms afterwards (e.g. Boss's own). Neither slows the sale.
+              const a = me.payment_accounts.find((x) => x.id === p.accountId);
+              if (!a || p.method === 'cash') return null;
+              return (
+                <p className="w-full pl-[5.5rem] text-sm text-ink-soft">
+                  {[a.bank_name, a.account_number, a.account_name].filter(Boolean).join(' · ')}
+                  {a.needs_confirmation && <span className="block text-warn">The owner and managers will be asked to confirm this payment arrived. The sale goes through now.</span>}
+                </p>
+              );
+            })()}
           </div>
         ))}
         <div className="flex flex-wrap gap-2">

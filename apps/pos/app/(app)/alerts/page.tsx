@@ -10,6 +10,7 @@ function linkFor(a: Alert): string | null {
   if (a.entity === 'sale') return `/sales/${a.entity_id}`;
   if (a.entity === 'delivery') return `/stock/purchases/${a.entity_id}`;
   if (a.entity === 'cash_up') return '/money';
+  if (a.entity === 'payment') return '/money/confirm';
   return null;
 }
 

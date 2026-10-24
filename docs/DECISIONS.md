@@ -420,3 +420,23 @@ and moves everything else onto it:
 **Why:** With one model split across up to 29 records, no stock number or sales report for that
 model was right. Merging fixes the past. The duplicate-name guard (session 16 follow-up) stops
 it happening again.
+
+### D-041 · Account details, payments to confirm, and per-person permissions (2026-10-24)
+**Choice:**
+- **Accounts carry their details:** bank, 10-digit account number and account name. At checkout
+  the cashier sees them for the chosen account, to read out to the customer.
+- **Whose account:** the business's, or a person's own (e.g. Boss's Access and Sterling accounts).
+  Payments into a personal account, or any account marked "needs confirming", **complete the sale
+  immediately**. The owner and everyone who sees Money are alerted, and the payment waits in
+  Money → Payments to confirm until someone marks it **Received** or **Not received** (a note is
+  required, and the owner is alerted). Until then Money → Today shows it as "not confirmed yet".
+- **Accounts have their own permission,** "Manage bank and card accounts". The owner has it and can
+  give it to one chosen manager.
+- **Per-person permissions:** on any staff member's page, the owner can give or take away a single
+  permission for that person only, without changing their role. Every change is logged.
+- Accounts are retired ("Stop using"), never deleted, so past payments still report correctly.
+**Why:** Customers sometimes pay into Boss's own accounts, which the shop can't check at the till.
+The convention in other systems is to set up payment types centrally (Square's custom payment
+methods can only be deactivated, never deleted, to protect reports) and to confirm transfers
+that can't be seen instantly (Moniepoint holds POS transfers until the merchant accepts them).
+Here we confirm after the sale, so the queue never waits.

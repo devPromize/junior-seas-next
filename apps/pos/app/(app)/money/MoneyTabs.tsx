@@ -3,10 +3,11 @@ import { can, type Me } from '@/lib/pos';
 
 export const MONEY_TABS = [
   { key: 'overview', href: '/money', label: 'Today', anyOf: ['money.view'] },
+  { key: 'confirm', href: '/money/confirm', label: 'Payments to confirm', anyOf: ['money.view', 'accounts.manage'] },
   { key: 'bills', href: '/money/bills', label: 'Supplier bills', anyOf: ['money.view', 'suppliers.pay'] },
   { key: 'expenses', href: '/money/expenses', label: 'Expenses', anyOf: ['money.view', 'expenses.manage'] },
   { key: 'cash-up', href: '/money/cash-up', label: 'Cash-up', anyOf: ['till.manage'] },
-  { key: 'accounts', href: '/money/accounts', label: 'Bank & card accounts', anyOf: ['settings.manage'] },
+  { key: 'accounts', href: '/money/accounts', label: 'Bank & card accounts', anyOf: ['accounts.manage'] },
 ] as const;
 
 export const moneyTabsFor = (me: Me) => MONEY_TABS.filter((t) => t.anyOf.some((p) => can(me, p)));

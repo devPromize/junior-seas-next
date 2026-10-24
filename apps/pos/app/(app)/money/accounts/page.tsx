@@ -5,11 +5,12 @@ import { can } from '@/lib/pos';
 import MoneyTabs from '../MoneyTabs';
 import AccountsEditor, { type Account } from './AccountsEditor';
 
-// The bank, POS-terminal and online accounts money goes into. Change them when the shop changes banks.
+// The bank accounts, POS machines and online accounts money goes into. The owner manages them,
+// or a person the owner has given "Manage bank and card accounts".
 export default async function AccountsPage() {
   const { me } = await getMe();
   if (!me) return null;
-  if (!can(me, 'settings.manage')) redirect('/money');
+  if (!can(me, 'accounts.manage')) redirect('/money');
   const { data, error } = await (await createClient()).rpc('pos_payment_accounts');
 
   return (
