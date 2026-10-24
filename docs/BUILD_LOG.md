@@ -668,3 +668,17 @@ merging can't change a price without permission. All passing.
 **Worth showing**
 - Before and after: "TECNO SPARK 40 4+128GB" × 29 → one product with its true stock.
 - The verification table: stock 80,802 → 80,802, phones 537 → 537, products 3,879 → 3,667.
+
+**Follow-up: 129 price decisions in one screen**
+- The remaining duplicate groups have copies at different prices. Instead of 129 separate
+  decisions, the Duplicates page now pre-chooses each one (the copy sold most recently, at its
+  price) and offers "Merge all with the prices shown". Staff only change the ones they disagree
+  with.
+- Groups whose prices are more than 50% apart (8) are listed first and held back until someone
+  ticks "I've checked: same product, right price". The first of them already proved the point:
+  "IPHONE 15 PRO MAX CASE" turned out to be three different products (a wireless-charging case,
+  an open-and-close case and a camera guard) saved under one name. They need renaming, not
+  merging.
+- *What broke:* the page crashed on first load because the server-side page called a helper
+  that lived in a browser-only file. Shared helpers now live in `lib/duplicates.ts`, used by
+  both. Found by opening the page before handing it over.

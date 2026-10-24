@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getMe } from '@/lib/me';
 import { can } from '@/lib/pos';
-import DuplicateGroup, { type Group } from './DuplicateGroup';
+import { bigGap, type Group } from '@/lib/duplicates';
+import DuplicatesReview from './DuplicatesReview';
 import MergeSimple from './MergeSimple';
 
 // Products saved more than once in the old system, grouped by name, to merge into one each.
@@ -14,7 +15,9 @@ export default async function DuplicatesPage() {
   const { data, error } = await (await createClient()).rpc('pos_duplicate_groups');
   const groups = (data ?? []) as Group[];
   const simple = groups.filter((g) => g.same_price && !g.mixed_imei);
-  const needChoice = groups.filter((g) => !g.same_price || g.mixed_imei);
+  // Groups to decide on; the ones with prices far apart first, so they get a proper look.
+  const needChoice = groups.filter((g) => !g.same_price || g.mixed_imei)
+    .sort((a, b) => Number(bigGap(b)) - Number(bigGap(a)));
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6">
@@ -40,21 +43,14 @@ export default async function DuplicatesPage() {
 
       {needChoice.length > 0 && (
         <>
-          <h2 className="mt-2 text-lg font-semibold">{needChoice.length} need a decision</h2>
+          <h2 className="mt-2 text-lg font-semibold">{needChoice.length} with different prices</h2>
           <p className="text-sm text-ink-soft">
-            The copies have different prices (usually the price at each delivery), so choose which price to keep.
-            The suggested copy is the one used most recently.
+            Each one already has a choice made: the copy sold most recently, at its price. Change only the ones you
+            disagree with, then merge them all at once. Groups whose prices are far apart are at the top and need a tick
+            first, in case they’re really different products.
           </p>
-          {needChoice.map((g) => <DuplicateGroup key={g.name} group={g} canPrice={can(me, 'prices.edit')} />)}
+          <DuplicatesReview groups={needChoice} canPrice={can(me, 'prices.edit')} />
         </>
-      )}
-      {simple.length > 0 && (
-        <details className="rounded-xl border border-line bg-panel p-4">
-          <summary className="cursor-pointer font-semibold">See the {simple.length} same-price groups one by one</summary>
-          <div className="mt-3 flex flex-col gap-3">
-            {simple.map((g) => <DuplicateGroup key={g.name} group={g} canPrice={can(me, 'prices.edit')} />)}
-          </div>
-        </details>
       )}
     </main>
   );
