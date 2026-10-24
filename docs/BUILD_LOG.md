@@ -746,3 +746,47 @@ continued from where it stopped.
 **Worth showing**
 - Side by side: the cashier's "waiting" screen and the manager's phone with "Received ✓". Tap it,
   and the cashier's screen turns into the receipt.
+
+## 2026-10-24 · Session 19: Reports (D-043)
+
+**What we built**
+- **Reports** in the sidebar, no longer greyed out. Pick a range with one tap (Today … This year) or
+  exact dates, and optionally a department.
+- Tiles for sales, gross profit and margin, receipts, average sale, items sold and refunds, each
+  with "▲/▼ vs the same number of days before".
+- A day-by-day (or month-by-month) chart: hover or tap a column for sales, receipts and profit,
+  and "See the numbers" opens the table.
+- Breakdowns by department and category, a salesperson table, the top 25 products with margin,
+  the busiest hours of the day, and how customers paid.
+- A full 18 months of history loads in about two seconds, and a month in about a tenth of a second.
+
+**What broke, and how we fixed it**
+- *The totals came up about 4.5% short.* How we found it: compared the report with the raw sales
+  and the number of sales didn't match. Cause: 832 old sale lines are for products that were
+  deleted in the old system, and the report only counted lines with a product. Fix: count them
+  under the name printed on the sale.
+- *75 old sales were 1–4 kobo off after spreading their discounts across items.* How we found it:
+  a test checks that every sale's items add up to what was paid. Cause: the share was worked out
+  as a decimal and each item rounded separately. Fix: work in whole kobo and give the last item
+  whatever is left over.
+- *The page crashed on first load* ("Functions cannot be passed directly to Client Components").
+  Cause: the server page handed the chart a formatting function, which can't travel to the
+  browser. Fix: pass the word "count" or "naira" instead.
+- *The chart's top label overlapped its title, and some totals showed kobo.* Fixed by spacing the
+  chart and showing whole naira in reports.
+
+**Found in the old data** (findings 21–25): no cost recorded at the moment of sale; discounts kept
+on the whole sale; products deleted while their sales remained; "salesperson" was really whoever
+was signed in at that floor's till.
+
+**Tests:** 10 new tests (the whole history reconciles to every sale line; departments, salespeople,
+categories and months each add up to the total; branch transfers left out; old discounts add up;
+"vs previous period" is the right period; a manager sees only their department and no profit;
+reps can't open reports; a backwards range is refused; a sale made today shows at once with exact
+profit). All passing.
+
+**Worth showing**
+- The Reports page on "This month": tiles across the top, then the chart with one column's hover box.
+- "Busiest hours": most receipts come in the late afternoon, which is useful for staff rotas.
+- Don't show real naira totals publicly: crop to the layout, or show percentages and the shape of
+  the chart.

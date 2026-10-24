@@ -14,7 +14,7 @@ export const NAV: NavItem[] = [
   { label: 'Customers', href: '/customers', anyOf: ['customers.manage', 'customers.export'] },
   { label: 'Staff', href: '/staff', anyOf: ['staff.manage'] },
   { label: 'Money', href: '/money', anyOf: ['money.view', 'suppliers.pay', 'expenses.manage', 'till.manage', 'accounts.manage'] },
-  { label: 'Reports', anyOf: ['reports.view'] },
+  { label: 'Reports', href: '/reports', anyOf: ['reports.view'] },
   { label: 'Settings', href: '/settings', anyOf: ['settings.manage'] },
 ];
 

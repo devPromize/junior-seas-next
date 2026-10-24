@@ -110,3 +110,29 @@ Last updated: 23 October 2026 (20 findings).
     → *New POS:* a product can't be created with a name that already exists, and while you type a
     new product's name it shows the existing ones with "Use this". The existing copies need
     merging (planned).
+
+## Found while building Reports
+
+21. **No cost recorded at the moment of sale.** None of the ~30,000 old sales store what the item
+    cost the shop, only today's cost price on the product. So past profit can only be estimated,
+    and changing a cost price quietly rewrites the profit of every past sale.
+    → *New POS:* each sale line keeps its cost from the moment of sale. Phones always use the real
+    cost of that exact phone. Old non-phone sales are shown with an "estimate" label.
+
+22. **Discounts on the whole sale, not on the items.** About 12% of old sales had a discount
+    recorded only against the total, so a product's or department's sales looked higher than what
+    was actually paid. → *New POS:* every discount is spread across the items, and the old ones were
+    spread the same way when imported. Every sale still adds up to the kobo.
+
+23. **Products deleted while their sales remained.** 832 old sale lines point to products that
+    were deleted (laptops, phones, screens), about 4.5% of sales value, with no cost price left.
+    → *New POS:* products are retired, never deleted, so history always has its product.
+
+24. **"Salesperson" was really whoever was signed in at the till.** Sales sit almost entirely under
+    one name per floor at a time (one person covers most phone and parts sales for 18 months), so
+    the old system can't say which rep actually served the customer.
+    → *New POS:* the rep who builds the sale and the cashier who takes payment are recorded
+    separately, each with their own login.
+
+25. **Small gaps:** 59 old sales have no items at all, and 39 have items adding up to less than the
+    total (together about 0.2% of sales value). They're kept as they are.

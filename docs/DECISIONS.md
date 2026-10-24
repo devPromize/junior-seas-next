@@ -460,3 +460,30 @@ Here we confirm after the sale, so the queue never waits.
 goods leave. It's per account rather than shop-wide, so ordinary sales stay fast.
 **Limit:** stock for non-phone items isn't reserved while waiting. If the last one sells meanwhile,
 "Received" shows the stock error, and the cashier stops waiting, fixes the order and sends it again.
+
+### D-043 · Reports: one page, any date range, honest about old data (2026-10-24)
+**Choice:**
+- One **Reports** page with quick ranges (Today, Yesterday, Last 7 days, This month, Last month,
+  This year), exact dates, and a department filter. Totals come with "vs the same number of days
+  before". It shows sales by day or month, department, category, salesperson, the top 25 products,
+  the busiest hours, and how customers paid.
+- **Who sees what:** "See reports for their departments" shows sales for that person's departments
+  only. Profit and margin need "See cost prices and profit" as well. The owner sees everything, and
+  can give profit access to one person. The payment split is shown for the whole shop only, because
+  one payment can cover several departments.
+- **Branch transfers never count as sales.** Amounts are after discounts. Profit is gross (sales
+  minus cost of goods), before refunds and expenses, and labelled that way.
+- **Profit on old sales:** phones use the real cost of that exact phone. Other items use today's
+  cost price, and the page says what share of sales that estimate covers. New sales store the cost
+  at the moment of sale, so their profit is exact.
+- **Old data was cleaned for reporting:** sale-level discounts were spread across items (in whole
+  kobo, so every sale still adds up), and sales of products deleted in the old system are counted
+  under the name on the sale.
+- The page says **how recent the data is**. Until the new tills are in use, the newest sales are the
+  history copied on 19 Oct.
+**Why:** The owner needs one place to see how the business is doing, with figures that reconcile.
+The tests check that departments, salespeople, categories and periods all add up to the total,
+and that the total matches every sale line. Showing the estimate openly is better than presenting
+guessed profit as fact.
+**Later:** export to a spreadsheet; expenses alongside profit (net profit); slow-moving stock;
+staff commission.
